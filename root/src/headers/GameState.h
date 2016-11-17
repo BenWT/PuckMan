@@ -16,6 +16,7 @@ class GameState {
 public:
 	// Variables
 	Sprite playerSprite;
+	std::array<Tile, N_TILES * N_TILES> tileGrid;
 
 	// Get + Set State
 	MenuState GetState() {
@@ -23,14 +24,6 @@ public:
 	}
 	void SetState(MenuState state) {
 		this->state = state;
-	}
-
-	// Get Tile
-	Tile GetTile(int i) {
-		return tileGrid[i];
-	}
-	Tile GetTile(int x, int y) {
-		return tileGrid[y + (x * N_TILES)];
 	}
 
 	// Constructors
@@ -45,7 +38,6 @@ public:
 	}
 private:
 	MenuState state;
-	std::array<Tile, N_TILES * N_TILES> tileGrid;
 };
 
 #endif

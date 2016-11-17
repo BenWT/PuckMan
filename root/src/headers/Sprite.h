@@ -18,13 +18,13 @@ public:
 	SDL_Rect destRect;
 
 	void CalculateRect() {
-		int x = position.x - (scale.x / 2);
-		int y = position.y - (scale.y / 2);
-
-		destRect.x = x;
-		destRect.y = y;
+		destRect.x = position.x;
+		destRect.y = position.y;
 		destRect.w = scale.x;
 		destRect.h = scale.y;
+
+		position.x += scale.x;
+		position.y += scale.y;
 	}
 	void SetTexture(SDL_Texture* texture) {
 		this->texture = texture;
