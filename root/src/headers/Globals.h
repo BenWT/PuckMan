@@ -11,4 +11,9 @@
 #define SCREEN_WIDTH TILE_SIZE * N_TILES
 #define SCREEN_HEIGHT SCREEN_WIDTH + SCORE_REGION
 
+int GRID_TYPE[] {
+	0, 0,
+	0, 0
+};
+
 #endif

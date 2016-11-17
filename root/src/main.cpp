@@ -86,6 +86,12 @@ void InitialiseSprites() {
 	// Textures
 	SDL_Texture* playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
 
+	for (int i = 0; i < N_TILES * N_TILES; i++) {
+		Sprite *t = new Sprite(playerTexture, NewRect(0, 0, -1, -1), NewVector(TILE_SIZE / 2, TILE_SIZE / 2));
+		gameState.GetTile(i).SetSprite(*t);
+		delete t;
+	}
+
 	Sprite *p = new Sprite(playerTexture, NewRect(0, 0, -1, -1), NewVector(TILE_SIZE / 2, TILE_SIZE / 2));
 	gameState.playerSprite = *p;
 	delete p;
