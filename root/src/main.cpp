@@ -19,7 +19,6 @@ void InitialiseSprites();
 void ProcessInput(bool&);
 void Update(double&);
 void Render();
-void RenderSprite(Sprite&);
 Vector2 NewVector(int x, int y) {
 	Vector2 v(x, y); return v;
 }
@@ -130,20 +129,16 @@ void Render() {
 	for (int y = 0; y < N_TILES; y++) {
 		for (int x = 0; x < N_TILES; x++) {
 			Sprite s = gameState.GetTile(x, y).GetSprite();
-			RenderSprite(s);
+			s.Render(renderer);
 		}
 	}
 
 	// Player Sprite
-	RenderSprite(gameState.playerSprite);
+	gameState.playerSprite.Render(renderer);
 
 	// Background Color
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
 	// Finalise Render
 	SDL_RenderPresent(renderer);
-}
-
-void RenderSprite(Sprite &s) {
-	SDL_RenderCopy(renderer, s.texture, (s.srcRect.w == -1) ? NULL : &s.srcRect, &s.destRect);
 }

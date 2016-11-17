@@ -29,6 +29,9 @@ public:
 	void SetTexture(SDL_Texture* texture) {
 		this->texture = texture;
 	}
+	void Render(SDL_Renderer* renderer) {
+		SDL_RenderCopy(renderer, texture, (srcRect.w == -1) ? NULL : &srcRect, &destRect);
+	}
 
 	Sprite() {}
 	Sprite(SDL_Texture* texture, SDL_Rect srcRect, Vector2 position) {
