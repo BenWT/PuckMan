@@ -40,7 +40,7 @@ SDL_Rect scoreRect = NewRect(0, SCREEN_WIDTH, SCREEN_WIDTH, SCORE_REGION);
 
 GameState gameState;
 
-int main()
+int main(int argc, char *argv[])
 {
 	// Initialise SDL and log failure
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
