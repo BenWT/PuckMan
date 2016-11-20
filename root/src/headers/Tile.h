@@ -44,6 +44,11 @@ public:
 	}
 
 	// Constructor
+	Tile() {
+		this->state = 0;
+		this->w = 0;
+		this->h = 0;
+	}
 	Tile(int index) {
 		this->state = GRID_TYPE[index];
 		this->w = index % 5;
@@ -53,7 +58,7 @@ private:
 	Sprite sprite;
 	int state;
 	int w;
-	int g;
+	int h;
 };
 
 #endif

@@ -82,31 +82,17 @@ int main()
 void InitialiseSprites() {
 	// Surfaces
 	SDL_Surface* playerSurface = SDL_LoadBMP("assets/character.bmp");
-<<<<<<< HEAD
 	SDL_Surface* tileSurface = SDL_LoadBMP("assets/tiles.bmp");
-=======
-	SDL_Surface* tileSurface = SDL_LoadBMP("assets/tile.bmp");
->>>>>>> 20f5fb6b04815c66256a3382df80b985bab90e6e
 
 	// Textures
 	SDL_Texture* playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
 	SDL_Texture* tileTexture = SDL_CreateTextureFromSurface(renderer, tileSurface);
 
-<<<<<<< HEAD
-	for (int i = 0; i < N_TILES * N_TILES; i++) {
-		Tile* t = gameState.GetTile(i);
-		Sprite *s = new Sprite(tileSurface, NewRect(t->GetWidth() * TILE_SIZE, t->GetHeight() * TILE_SIZE, TILE_SIZE, TILE_SIZE), NewVector(TILE_SIZE / 2, TILE_SIZE / 2));
-		t->SetSprite(*t);
-		delete s;
-=======
 	// Tile Textures
-	for (int y = 0; y < N_TILES; y++) {
-		for (int x = 0; x < N_TILES; x++) {
-			Sprite *t = new Sprite(tileTexture, NewRect(0, 0, -1, -1), NewVector(x * TILE_SIZE, y * TILE_SIZE));
-			gameState.tileGrid[y + (x * N_TILES)].SetSprite(*t);
-			delete t;
-		}
->>>>>>> 20f5fb6b04815c66256a3382df80b985bab90e6e
+	for (int i = 0; i < N_TILES * N_TILES; i++) {
+		Sprite *s = new Sprite(tileTexture, NewRect(gameState.tileGrid[i].GetWidth() * TILE_SIZE, gameState.tileGrid[i].GetHeight() * TILE_SIZE, TILE_SIZE, TILE_SIZE), NewVector(TILE_SIZE / 2, TILE_SIZE / 2));
+		gameState.tileGrid[i].SetSprite(*s);
+		delete s;
 	}
 
 	// Player Textures
