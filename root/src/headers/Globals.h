@@ -11,8 +11,10 @@
 #define SCREEN_WIDTH TILE_SIZE * N_TILES
 #define SCREEN_HEIGHT SCREEN_WIDTH + SCORE_REGION
 
+#define TILE_SPRITE_COUNT 10
+
 int GRID_TYPE[] {
-	6, 4, 7, 0, 6, 2, 7,
+	6, 2, 7, 0, 6, 2, 7,
 	1, 0, 3, 0, 1, 0, 3,
 	1, 0, 0, 2, 0, 0, 3,
 	1, 0, 0, 0, 0, 0, 3,

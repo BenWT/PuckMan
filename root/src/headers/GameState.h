@@ -28,10 +28,10 @@ public:
 
 	// Constructors
 	GameState() {
-		for (int i = 0; i < N_TILES; i++) {
-			for (int j = 0; j < N_TILES; j++) {
-				Tile *t = new Tile(j + (i * N_TILES));
-				tileGrid[j + (i * N_TILES)] = *t;
+		for (int y = 0; y < N_TILES; y++) {
+			for (int x = 0; x < N_TILES; x++) {
+				Tile *t = new Tile(x + (y * N_TILES), x, y);
+				tileGrid[x + (y * N_TILES)] = *t;
 				delete t;
 			}
 		}

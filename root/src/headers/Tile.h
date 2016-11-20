@@ -36,6 +36,12 @@ public:
 	int GetState() {
 		return state;
 	}
+	int GetX() {
+		return x;
+	}
+	int GetY() {
+		return y;
+	}
 	int GetWidth() {
 		return w;
 	}
@@ -46,17 +52,38 @@ public:
 	// Constructor
 	Tile() {
 		this->state = 0;
+		this->x = 0;
+		this->y = 0;
 		this->w = 0;
 		this->h = 0;
 	}
-	Tile(int index) {
+	Tile(int index, int x, int y) {
 		this->state = GRID_TYPE[index];
-		this->w = index % 5;
-		this->h = index % 2;
+		this->x = x;
+		this->y = y;
+		/* this->w = GRID_TYPE[index] % 5;
+		this->h = GRID_TYPE[index] % 2;
+
+		if (GRID_TYPE[index] < 5) {
+			this->w = GRID_TYPE[index];
+			this->h = 0;
+		} else {
+			this->w = GRID_TYPE[index] ;
+			this->h = 1;
+		}*/
+
+		this->h = (int)GRID_TYPE[index] / 5;
+		this->w = GRID_TYPE[index] % 5;
+
+
+
+		std::cout << this->state << " " << this->w << " " << this->h << std::endl;
 	}
 private:
 	Sprite sprite;
 	int state;
+	int x;
+	int y;
 	int w;
 	int h;
 };

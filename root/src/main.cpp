@@ -90,7 +90,12 @@ void InitialiseSprites() {
 
 	// Tile Textures
 	for (int i = 0; i < N_TILES * N_TILES; i++) {
-		Sprite *s = new Sprite(tileTexture, NewRect(gameState.tileGrid[i].GetWidth() * TILE_SIZE, gameState.tileGrid[i].GetHeight() * TILE_SIZE, TILE_SIZE, TILE_SIZE), NewVector(TILE_SIZE / 2, TILE_SIZE / 2));
+		Tile t = gameState.tileGrid[i];
+		Sprite *s = new Sprite(
+			tileTexture,
+			NewRect(t.GetWidth() * TILE_SIZE, t.GetHeight() * TILE_SIZE, TILE_SIZE, TILE_SIZE),
+			NewVector(t.GetX() * TILE_SIZE, t.GetY() * TILE_SIZE)
+		);
 		gameState.tileGrid[i].SetSprite(*s);
 		delete s;
 	}
@@ -143,8 +148,13 @@ void Render() {
 		}
 	}
 
+	for (int i = 0; i < N_TILES * N_TILES; i++) {
+		Sprite s = gameState.tileGrid[i].GetSprite();
+		s.Render(renderer);
+	}
+
 	// Player Sprite
-	gameState.playerSprite.Render(renderer);
+	//gameState.playerSprite.Render(renderer);
 
 	// Background Color
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
