@@ -82,14 +82,17 @@ int main()
 void InitialiseSprites() {
 	// Surfaces
 	SDL_Surface* playerSurface = SDL_LoadBMP("assets/character.bmp");
+	SDL_Surface* tileSurface = SDL_LoadBMP("assets/tiles.bmp");
 
 	// Textures
 	SDL_Texture* playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
+	SDL_Texture* tileTexture = SDL_CreateTextureFromSurface(renderer, tileSurface);
 
 	for (int i = 0; i < N_TILES * N_TILES; i++) {
-		Sprite *t = new Sprite(playerTexture, NewRect(0, 0, -1, -1), NewVector(TILE_SIZE / 2, TILE_SIZE / 2));
-		gameState.GetTile(i).SetSprite(*t);
-		delete t;
+		Tile* t = gameState.GetTile(i);
+		Sprite *s = new Sprite(tileSurface, NewRect(t->GetWidth() * TILE_SIZE, t->GetHeight() * TILE_SIZE, TILE_SIZE, TILE_SIZE), NewVector(TILE_SIZE / 2, TILE_SIZE / 2));
+		t->SetSprite(*t);
+		delete s;
 	}
 
 	Sprite *p = new Sprite(playerTexture, NewRect(0, 0, -1, -1), NewVector(TILE_SIZE / 2, TILE_SIZE / 2));

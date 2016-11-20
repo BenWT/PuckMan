@@ -5,15 +5,20 @@
 #ifndef globals_h
 #define globals_h
 
-#define N_TILES 2
+#define N_TILES 7
 #define TILE_SIZE 100
 #define SCORE_REGION 300
 #define SCREEN_WIDTH TILE_SIZE * N_TILES
 #define SCREEN_HEIGHT SCREEN_WIDTH + SCORE_REGION
 
 int GRID_TYPE[] {
-	0, 0,
-	0, 0
+	6, 4, 7, 0, 6, 2, 7,
+	1, 0, 3, 0, 1, 0, 3,
+	1, 0, 0, 2, 0, 0, 3,
+	1, 0, 0, 0, 0, 0, 3,
+	5, 4, 4, 4, 4, 4, 8,
+	0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0
 };
 
 #endif

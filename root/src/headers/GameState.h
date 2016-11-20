@@ -37,7 +37,7 @@ public:
 	GameState() {
 		for (int i = 0; i < N_TILES; i++) {
 			for (int j = 0; j < N_TILES; j++) {
-				Tile *t = new Tile();
+				Tile *t = new Tile(j + (i * N_TILES));
 				tileGrid[j + (i * N_TILES)] = *t;
 				delete t;
 			}
