@@ -3,44 +3,45 @@
 //
 
 #include "Player.h"
+#include "Globals.h"
 
-void Player::MoveUp(GameState* state) {
-    if (tileExists(tile - TILE_ROWS)) {
-        tile -= TILE_ROWS;
-        position->y -= TILE_SIZE;
+void Player::MoveUp() {
+    if (tileExists(tile - Globals::TILE_ROWS)) {
+        tile -= Globals::TILE_ROWS;
+        position->y -= Globals::TILE_SIZE;
         CalculateRect();
     }
 }
-void Player::MoveDown(GameState* state) {
-    if (tileExists(tile + TILE_ROWS)) {
-        tile += TILE_ROWS;
-        position->y += TILE_SIZE;
+void Player::MoveDown() {
+    if (tileExists(tile + Globals::TILE_ROWS)) {
+        tile += Globals::TILE_ROWS;
+        position->y += Globals::TILE_SIZE;
         CalculateRect();
     }
 }
-void Player::MoveLeft(GameState* state) {
+void Player::MoveLeft() {
     if (tileExists(tile - 1)) {
         tile -= 1;
-        position->x -= TILE_SIZE;
+        position->x -= Globals::TILE_SIZE;
         CalculateRect();
     }
 }
-void Player::MoveRight(GameState* state) {
+void Player::MoveRight() {
     if (tileExists(tile + 1)) {
         tile += 1;
-        position->x += TILE_SIZE;
+        position->x += Globals::TILE_SIZE;
         CalculateRect();
     }
 }
 
 bool Player::tileExists(int currentIndex) {
-    if (currentIndex >= 0 && currentIndex < TILE_COUNT) {
+    if (currentIndex >= 0 && currentIndex < Globals::TILE_COUNT) {
         return true;
     }
     return false;
 }
 bool Player::firstInRow(int currentIndex) {
-    if (currentIndex % TILE_ROWS == 0) {
+    if (currentIndex % Globals::TILE_ROWS == 0) {
         return true;
     }
     return false;

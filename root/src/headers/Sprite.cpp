@@ -3,6 +3,7 @@
 //
 
 #include "Sprite.h"
+#include "Globals.h"
 
 void Sprite::CalculateRect() {
     destRect.x = this->position->x - (this->scale->x / 2);
@@ -22,7 +23,7 @@ void Sprite::Render(SDL_Renderer* renderer) {
 Sprite::Sprite() {}
 Sprite::Sprite(SDL_Texture* texture, SDL_Rect srcRect, Vector2* position) {
     this->texture = texture;
-    this->scale = new Vector2(TILE_SIZE, TILE_SIZE);
+    this->scale = new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE);
     this->position = position;
     this->srcRect = srcRect;
 

@@ -4,7 +4,7 @@
 
 #pragma once
 
-//#include "Globals.h"
+#include "Globals.h"
 #include "Sprite.h"
 #include "Vector2.h"
 

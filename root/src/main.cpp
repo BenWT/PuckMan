@@ -34,8 +34,6 @@ double TimeSinceLastFrame(high_resolution_clock::time_point frameTime) {
 // Global Variables
 SDL_Window *window;
 SDL_Renderer *renderer;
-SDL_Rect gameRect = NewRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-SDL_Rect scoreRect = NewRect(0, SCREEN_WIDTH, SCREEN_WIDTH, SCORE_REGION);
 
 GameState* gameState;
 
@@ -48,14 +46,14 @@ int main(int argc, char *argv[]) {
 		SDL_Log("SDL initialised successfully. \n");
 	}
 
-	SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE, &window, &renderer);
+	SDL_CreateWindowAndRenderer(Globals::SCREEN_WIDTH, Globals::SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE, &window, &renderer);
 
 	// Log window failure
 	if (window == NULL || renderer == NULL) {
 		SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL failed to create a window. \n");
 		return 1;
 	} else {
-		SDL_RenderSetLogicalSize(renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
+		SDL_RenderSetLogicalSize(renderer, Globals::SCREEN_WIDTH, Globals::SCREEN_HEIGHT);
 	}
 
 	InitialiseSprites();
@@ -87,20 +85,20 @@ void InitialiseSprites() {
 	SDL_Texture* tileTexture = SDL_CreateTextureFromSurface(renderer, tileSurface);
 
 	// Tile Textures
-	for (int i = 0; i < TILE_COUNT; i++) {
+	for (int i = 0; i < Globals::TILE_COUNT; i++) {
 		Tile t = gameState->tileGrid[i];
 		Sprite *s = new Sprite(
 			tileTexture,
-			NewRect(t.GetWidth() * TILE_SIZE, t.GetHeight() * TILE_SIZE, TILE_SIZE, TILE_SIZE),
-			new Vector2(t.GetX() * TILE_SIZE, t.GetY() * TILE_SIZE)
+			NewRect(t.GetWidth() * Globals::TILE_SIZE, t.GetHeight() * Globals::TILE_SIZE, Globals::TILE_SIZE, Globals::TILE_SIZE),
+			new Vector2(t.GetX() * Globals::TILE_SIZE, t.GetY() * Globals::TILE_SIZE)
 		);
 		gameState->tileGrid[i].SetSprite(*s);
 		delete s;
 	}
 
 	// Player Textures
-	Player *p = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(TILE_SIZE, TILE_SIZE));
-	p->tile = PLAYER_START_X + (PLAYER_START_Y * TILE_ROWS);
+	Player *p = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE));
+	p->tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
 	gameState->playerSprite = *p;
 	delete p;
 }
@@ -113,16 +111,16 @@ void ProcessInput(bool &running) {
 		switch (event.type) {
 			case SDL_KEYDOWN:
 				if (key == SDLK_w || key == SDLK_UP) {
-					gameState->playerSprite.MoveUp(gameState);
+					gameState->playerSprite.MoveUp();
 				}
 				if (key == SDLK_s || key == SDLK_DOWN) {
-					gameState->playerSprite.MoveDown(gameState);
+					gameState->playerSprite.MoveDown();
 				}
 				if (key == SDLK_a || key == SDLK_LEFT) {
-					gameState->playerSprite.MoveLeft(gameState);
+					gameState->playerSprite.MoveLeft();
 				}
 				if (key == SDLK_d || key == SDLK_RIGHT) {
-					gameState->playerSprite.MoveRight(gameState);
+					gameState->playerSprite.MoveRight();
 				}
 				break;
 
@@ -145,7 +143,7 @@ void Render() {
 
 	if (gameState->GetState() == Game) {
 		// Tile Sprites
-		for (int i = 0; i < TILE_COUNT; i++) {
+		for (int i = 0; i < Globals::TILE_COUNT; i++) {
 			Sprite s = gameState->tileGrid[i].GetSprite();
 			s.Render(renderer);
 		}

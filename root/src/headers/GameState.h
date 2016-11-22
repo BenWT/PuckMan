@@ -5,8 +5,9 @@
 #pragma once
 
 #include <array>
-#include "Sprite.h"
+#include "Globals.h"
 #include "Player.h"
+#include "Sprite.h"
 #include "Tile.h"
 
 enum MenuState { Main, Game };
@@ -14,7 +15,7 @@ enum MenuState { Main, Game };
 class GameState {
 public:
 	Player playerSprite;
-	std::array<Tile, TILE_COUNT> tileGrid;
+	std::array<Tile, Globals::TILE_COUNT> tileGrid;
 
 	MenuState GetState();
 	void SetState(MenuState);

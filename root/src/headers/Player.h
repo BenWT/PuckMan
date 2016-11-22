@@ -4,19 +4,16 @@
 
 #pragma once
 
-//#include "Globals.h"
-#include "GameState.h"
 #include "Sprite.h"
 
-class GameState;
 class Player : public Sprite {
 public:
 	int tile;
 
-	void MoveUp(GameState*);
-	void MoveDown(GameState*);
-	void MoveLeft(GameState*);
-	void MoveRight(GameState*);
+	void MoveUp();
+	void MoveDown();
+	void MoveLeft();
+	void MoveRight();
 	using Sprite::Sprite; // inherit constructors
 
 private:
