@@ -10,23 +10,10 @@ class Vector2 {
 public:
 	double x;
 	double y;
-	Vector2() {
-		x = 0;
-		y = 0;
-	}
-	Vector2(double _x, double _y) {
-		x = _x;
-		y = _y;
-	}
-	double Magnitude() {
-		return sqrt((x * x) + (y * y));
-	}
-	void Move(double _x, double _y) {
-		x += _x;
-		y += _y;
-	}
-	void Set(double _x, double _y) {
-		x = _x;
-		y = _y;
-	}
+	double Magnitude();
+	void Move(double, double);
+	void Set(double, double);
+
+	Vector2();
+	Vector2(double, double);
 };

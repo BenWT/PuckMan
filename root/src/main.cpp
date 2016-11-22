@@ -3,6 +3,7 @@
 //
 
 #include "headers/Globals.h"
+
 #include <iostream>
 #include <chrono>
 #include "SDL.h"
@@ -20,9 +21,6 @@ void InitialiseSprites();
 void ProcessInput(bool&);
 void Update(double&);
 void Render();
-Vector2 NewVector(int x, int y) {
-	Vector2 v(x, y); return v;
-}
 SDL_Rect NewRect(int x, int y, int w, int h) {
 	SDL_Rect r = { x, y, w, h }; return r;
 }
@@ -30,7 +28,7 @@ high_resolution_clock::time_point NowTime() {
 	return chrono::high_resolution_clock::now();
 }
 double TimeSinceLastFrame(high_resolution_clock::time_point frameTime) {
-	return (duration_cast<microseconds>(NowTime() - frameTime).count()) / 1000000;
+	return (duration_cast<microseconds>(NowTime() - frameTime).count()) / 1000000.0;
 }
 
 // Global Variables
@@ -39,7 +37,7 @@ SDL_Renderer *renderer;
 SDL_Rect gameRect = NewRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 SDL_Rect scoreRect = NewRect(0, SCREEN_WIDTH, SCREEN_WIDTH, SCORE_REGION);
 
-GameState gameState;
+GameState* gameState;
 
 int main(int argc, char *argv[]) {
 	// Initialise SDL and log failure
@@ -89,21 +87,21 @@ void InitialiseSprites() {
 	SDL_Texture* tileTexture = SDL_CreateTextureFromSurface(renderer, tileSurface);
 
 	// Tile Textures
-	for (int i = 0; i < N_TILES * N_TILES; i++) {
-		Tile t = gameState.tileGrid[i];
+	for (int i = 0; i < TILE_COUNT; i++) {
+		Tile t = gameState->tileGrid[i];
 		Sprite *s = new Sprite(
 			tileTexture,
 			NewRect(t.GetWidth() * TILE_SIZE, t.GetHeight() * TILE_SIZE, TILE_SIZE, TILE_SIZE),
-			NewVector(t.GetX() * TILE_SIZE, t.GetY() * TILE_SIZE)
+			new Vector2(t.GetX() * TILE_SIZE, t.GetY() * TILE_SIZE)
 		);
-		gameState.tileGrid[i].SetSprite(*s);
+		gameState->tileGrid[i].SetSprite(*s);
 		delete s;
 	}
 
 	// Player Textures
-	Player *p = new Player(playerTexture, NewRect(0, 0, -1, -1), NewVector(TILE_SIZE, TILE_SIZE));
-	p->tile = PLAYER_START_X + (PLAYER_START_Y * N_TILES);
-	gameState.playerSprite = *p;
+	Player *p = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(TILE_SIZE, TILE_SIZE));
+	p->tile = PLAYER_START_X + (PLAYER_START_Y * TILE_ROWS);
+	gameState->playerSprite = *p;
 	delete p;
 }
 
@@ -115,16 +113,16 @@ void ProcessInput(bool &running) {
 		switch (event.type) {
 			case SDL_KEYDOWN:
 				if (key == SDLK_w || key == SDLK_UP) {
-					gameState.playerSprite.MoveUp();
+					gameState->playerSprite.MoveUp(gameState);
 				}
 				if (key == SDLK_s || key == SDLK_DOWN) {
-					gameState.playerSprite.MoveDown();
+					gameState->playerSprite.MoveDown(gameState);
 				}
 				if (key == SDLK_a || key == SDLK_LEFT) {
-					gameState.playerSprite.MoveLeft();
+					gameState->playerSprite.MoveLeft(gameState);
 				}
 				if (key == SDLK_d || key == SDLK_RIGHT) {
-					gameState.playerSprite.MoveRight();
+					gameState->playerSprite.MoveRight(gameState);
 				}
 				break;
 
@@ -145,15 +143,15 @@ void Render() {
 	// Clear Previous Render
 	SDL_RenderClear(renderer);
 
-	if (gameState.GetState() == Game) {
+	if (gameState->GetState() == Game) {
 		// Tile Sprites
-		for (int i = 0; i < N_TILES * N_TILES; i++) {
-			Sprite s = gameState.tileGrid[i].GetSprite();
+		for (int i = 0; i < TILE_COUNT; i++) {
+			Sprite s = gameState->tileGrid[i].GetSprite();
 			s.Render(renderer);
 		}
 
 		// Player Sprite
-		gameState.playerSprite.Render(renderer);
+		gameState->playerSprite.Render(renderer);
 	}
 
 	// Finalise Render

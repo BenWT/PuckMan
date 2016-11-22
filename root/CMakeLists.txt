@@ -8,11 +8,17 @@ conan_basic_setup()
 
 add_executable(${PROJECT_NAME}
 	src/main.cpp
+	src/headers/GameState.cpp
 	src/headers/GameState.h
+	src/headers/Globals.cpp
 	src/headers/Globals.h
+	src/headers/Player.cpp
 	src/headers/Player.h
+	src/headers/Sprite.cpp
 	src/headers/Sprite.h
+	src/headers/Tile.cpp
 	src/headers/Tile.h
+	src/headers/Vector2.cpp
 	src/headers/Vector2.h
 )
 
