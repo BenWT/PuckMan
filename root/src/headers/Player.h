@@ -6,6 +6,8 @@
 
 #include "Sprite.h"
 
+// TODO Implement GameState linking
+class GameState;
 class Player : public Sprite {
 public:
 	int tile;

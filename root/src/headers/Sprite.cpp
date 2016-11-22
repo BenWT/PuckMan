@@ -6,10 +6,10 @@
 #include "Globals.h"
 
 void Sprite::CalculateRect() {
-    destRect.x = this->position->x - (this->scale->x / 2);
-    destRect.y = this->position->y - (this->scale->y / 2);
-    destRect.w = this->scale->x;
-    destRect.h = this->scale->y;
+    destRect.x = (int)(this->position->x - (this->scale->x / 2));
+    destRect.y = (int)(this->position->y - (this->scale->y / 2));
+    destRect.w = (int)(this->scale->x);
+    destRect.h = (int)(this->scale->y);
 }
 
 void Sprite::SetTexture(SDL_Texture* texture) {
