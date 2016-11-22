@@ -20,22 +20,22 @@ void Player::MoveDown() {
     }
 }
 void Player::MoveLeft() {
-    if (tileExists(tile - 1)) {
+    if (tileExists(tile)) {
         tile -= 1;
         position->x -= Globals::TILE_SIZE;
         CalculateRect();
     }
 }
 void Player::MoveRight() {
-    if (tileExists(tile + 1)) {
+    if (tileExists(tile)) {
         tile += 1;
         position->x += Globals::TILE_SIZE;
         CalculateRect();
     }
 }
 
-bool Player::tileExists(int currentIndex) {
-    if (currentIndex >= 0 && currentIndex < Globals::TILE_COUNT) {
+bool Player::tileExists(int newIndex) {
+    if (newIndex >= 0 && newIndex < Globals::TILE_COUNT) {
         return true;
     }
     return false;
@@ -47,7 +47,7 @@ bool Player::firstInRow(int currentIndex) {
     return false;
 }
 bool Player::lastInRow(int currentIndex) {
-    return firstInRow(currentIndex + 1);
+	return firstInRow(currentIndex + 1);
 }
 bool Player::shouldCollide(int newIndex) {
     // TODO Implement shouldCollide function

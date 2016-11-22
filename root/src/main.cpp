@@ -35,7 +35,7 @@ double TimeSinceLastFrame(high_resolution_clock::time_point frameTime) {
 SDL_Window *window;
 SDL_Renderer *renderer;
 
-GameState* gameState;
+GameState gameState;
 
 int main(int argc, char *argv[]) {
 	// Initialise SDL and log failure
@@ -86,20 +86,20 @@ void InitialiseSprites() {
 
 	// Tile Textures
 	for (int i = 0; i < Globals::TILE_COUNT; i++) {
-		Tile t = gameState->tileGrid[i];
+		Tile t = gameState.tileGrid[i];
 		Sprite *s = new Sprite(
 			tileTexture,
 			NewRect(t.GetWidth() * Globals::TILE_SIZE, t.GetHeight() * Globals::TILE_SIZE, Globals::TILE_SIZE, Globals::TILE_SIZE),
 			new Vector2(t.GetX() * Globals::TILE_SIZE, t.GetY() * Globals::TILE_SIZE)
 		);
-		gameState->tileGrid[i].SetSprite(*s);
+		gameState.tileGrid[i].SetSprite(*s);
 		delete s;
 	}
 
 	// Player Textures
 	Player *p = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE));
 	p->tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
-	gameState->playerSprite = *p;
+	gameState.playerSprite = *p;
 	delete p;
 }
 
@@ -111,16 +111,16 @@ void ProcessInput(bool &running) {
 		switch (event.type) {
 			case SDL_KEYDOWN:
 				if (key == SDLK_w || key == SDLK_UP) {
-					gameState->playerSprite.MoveUp();
+					gameState.playerSprite.MoveUp();
 				}
 				if (key == SDLK_s || key == SDLK_DOWN) {
-					gameState->playerSprite.MoveDown();
+					gameState.playerSprite.MoveDown();
 				}
 				if (key == SDLK_a || key == SDLK_LEFT) {
-					gameState->playerSprite.MoveLeft();
+					gameState.playerSprite.MoveLeft();
 				}
 				if (key == SDLK_d || key == SDLK_RIGHT) {
-					gameState->playerSprite.MoveRight();
+					gameState.playerSprite.MoveRight();
 				}
 				break;
 
@@ -141,15 +141,15 @@ void Render() {
 	// Clear Previous Render
 	SDL_RenderClear(renderer);
 
-	if (gameState->GetState() == Game) {
+	if (gameState.GetState() == Game) {
 		// Tile Sprites
 		for (int i = 0; i < Globals::TILE_COUNT; i++) {
-			Sprite s = gameState->tileGrid[i].GetSprite();
+			Sprite s = gameState.tileGrid[i].GetSprite();
 			s.Render(renderer);
 		}
 
 		// Player Sprite
-		gameState->playerSprite.Render(renderer);
+		gameState.playerSprite.Render(renderer);
 	}
 
 	// Finalise Render

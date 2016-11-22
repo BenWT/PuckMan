@@ -40,5 +40,5 @@ Tile::Tile() {
 Tile::Tile(int index, int x, int y) {
     this->state = Globals::GRID_TYPE[index];
     this->position = new Vector2(x, y);
-    this->scale = new Vector2((int)Globals::GRID_TYPE[index] / 5, Globals::GRID_TYPE[index] % 5);
+	this->scale = new Vector2(Globals::GRID_TYPE[index] % 5, (int)Globals::GRID_TYPE[index] / 5);
 }
