@@ -2,8 +2,7 @@
 // Copyright (c) 2016 by Ben Townshend. All Rights Reserved.
 //
 
-#ifndef sprite_h
-#define sprite_h
+#pragma once
 
 #include <string>
 #include "SDL.h"
@@ -18,13 +17,10 @@ public:
 	SDL_Rect destRect;
 
 	void CalculateRect() {
-		destRect.x = position.x;
-		destRect.y = position.y;
+		destRect.x = position.x - (scale.x / 2);
+		destRect.y = position.y - (scale.y / 2);
 		destRect.w = scale.x;
 		destRect.h = scale.y;
-
-		position.x += scale.x;
-		position.y += scale.y;
 	}
 	void SetTexture(SDL_Texture* texture) {
 		this->texture = texture;
@@ -36,10 +32,13 @@ public:
 	Sprite() {}
 	Sprite(SDL_Texture* texture, SDL_Rect srcRect, Vector2 position) {
 		this->texture = texture;
-		this->position = position;
 
 		Vector2 scaleV(TILE_SIZE, TILE_SIZE);
 		this->scale = scaleV;
+
+		this->position = position;
+		this->position.x += (scale.x / 2);
+		this->position.y += (scale.y / 2);
 
 		this->srcRect = srcRect;
 
@@ -55,5 +54,3 @@ public:
 	}
 private:
 };
-
-#endif

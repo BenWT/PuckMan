@@ -2,25 +2,11 @@
 // Copyright (c) 2016 by Ben Townshend. All Rights Reserved.
 //
 
-#ifndef tile_h
-#define tile_h
+#pragma once
 
 #include "Globals.h"
 #include "Sprite.h"
 #include "Vector2.h"
-
-/*
- * STATES
- * 0 - Empty
- * 1 - Left Wall
- * 2 - Top Wall
- * 3 - Right Wall
- * 4 - Bottom Wall
- * 5 - Bottom-Left Corner
- * 6 - Top-Left Corner
- * 7 - Top-Right Corner
- * 8 - Bottom-Right Corner
- */
 
 class Tile {
 public:
@@ -61,23 +47,8 @@ public:
 		this->state = GRID_TYPE[index];
 		this->x = x;
 		this->y = y;
-		/* this->w = GRID_TYPE[index] % 5;
-		this->h = GRID_TYPE[index] % 2;
-
-		if (GRID_TYPE[index] < 5) {
-			this->w = GRID_TYPE[index];
-			this->h = 0;
-		} else {
-			this->w = GRID_TYPE[index] ;
-			this->h = 1;
-		}*/
-
 		this->h = (int)GRID_TYPE[index] / 5;
 		this->w = GRID_TYPE[index] % 5;
-
-
-
-		std::cout << this->state << " " << this->w << " " << this->h << std::endl;
 	}
 private:
 	Sprite sprite;
@@ -87,5 +58,3 @@ private:
 	int w;
 	int h;
 };
-
-#endif

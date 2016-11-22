@@ -10,6 +10,7 @@
 #include "headers/Tile.h"
 #include "headers/Vector2.h"
 #include "headers/Sprite.h"
+#include "headers/Player.h"
 
 using namespace std;
 using namespace chrono;
@@ -40,8 +41,7 @@ SDL_Rect scoreRect = NewRect(0, SCREEN_WIDTH, SCREEN_WIDTH, SCORE_REGION);
 
 GameState gameState;
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 	// Initialise SDL and log failure
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
 		SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL failed to initialise. \n");
@@ -101,7 +101,8 @@ void InitialiseSprites() {
 	}
 
 	// Player Textures
-	Sprite *p = new Sprite(playerTexture, NewRect(0, 0, -1, -1), NewVector(0, 0));
+	Player *p = new Player(playerTexture, NewRect(0, 0, -1, -1), NewVector(TILE_SIZE, TILE_SIZE));
+	p->tile = PLAYER_START_X + (PLAYER_START_Y * N_TILES);
 	gameState.playerSprite = *p;
 	delete p;
 }
@@ -109,10 +110,22 @@ void InitialiseSprites() {
 void ProcessInput(bool &running) {
 	SDL_Event event;
     while (SDL_PollEvent(&event)) {
-		//SDL_Keycode key = event.key.keysym.sym;
+		SDL_Keycode key = event.key.keysym.sym;
 
 		switch (event.type) {
 			case SDL_KEYDOWN:
+				if (key == SDLK_w || key == SDLK_UP) {
+					gameState.playerSprite.MoveUp();
+				}
+				if (key == SDLK_s || key == SDLK_DOWN) {
+					gameState.playerSprite.MoveDown();
+				}
+				if (key == SDLK_a || key == SDLK_LEFT) {
+					gameState.playerSprite.MoveLeft();
+				}
+				if (key == SDLK_d || key == SDLK_RIGHT) {
+					gameState.playerSprite.MoveRight();
+				}
 				break;
 
 			case SDL_KEYUP:
@@ -132,33 +145,18 @@ void Render() {
 	// Clear Previous Render
 	SDL_RenderClear(renderer);
 
-	// Play Area Background
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-	SDL_RenderFillRect(renderer, &gameRect);
-
-	// Score Area Background
-	SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-	SDL_RenderFillRect(renderer, &scoreRect);
-
-	// Tile Sprites
-	for (int y = 0; y < N_TILES; y++) {
-		for (int x = 0; x < N_TILES; x++) {
-			Sprite s = gameState.tileGrid[y + (x * N_TILES)].GetSprite();
+	if (gameState.GetState() == Game) {
+		// Tile Sprites
+		for (int i = 0; i < N_TILES * N_TILES; i++) {
+			Sprite s = gameState.tileGrid[i].GetSprite();
 			s.Render(renderer);
 		}
+
+		// Player Sprite
+		gameState.playerSprite.Render(renderer);
 	}
-
-	for (int i = 0; i < N_TILES * N_TILES; i++) {
-		Sprite s = gameState.tileGrid[i].GetSprite();
-		s.Render(renderer);
-	}
-
-	// Player Sprite
-	//gameState.playerSprite.Render(renderer);
-
-	// Background Color
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
 	// Finalise Render
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 	SDL_RenderPresent(renderer);
 }

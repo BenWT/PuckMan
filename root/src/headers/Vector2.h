@@ -2,10 +2,9 @@
 // Copyright (c) 2016 by Ben Townshend. All Rights Reserved.
 //
 
-#include <cmath>
+#pragma once
 
-#ifndef vector2_H
-#define vector2_H
+#include <cmath>
 
 class Vector2 {
 public:
@@ -31,5 +30,3 @@ public:
 		y = _y;
 	}
 };
-
-#endif

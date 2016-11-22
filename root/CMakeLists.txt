@@ -10,6 +10,7 @@ add_executable(${PROJECT_NAME}
 	src/main.cpp
 	src/headers/GameState.h
 	src/headers/Globals.h
+	src/headers/Player.h
 	src/headers/Sprite.h
 	src/headers/Tile.h
 	src/headers/Vector2.h
