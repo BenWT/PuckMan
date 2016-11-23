@@ -19,26 +19,38 @@ int Tile::GetState() {
     return state;
 }
 
-int Tile::GetX() {
+Vector2* Tile::GetPosition() {
+    return position;
+}
+Vector2* Tile::GetTexturePosition() {
+    return texturePosition;
+}
+double Tile::GetPositionX() {
     return position->x;
 }
-int Tile::GetY() {
+double Tile::GetPositionY() {
     return position->y;
 }
-int Tile::GetWidth() {
-    return scale->x;
+double Tile::GetTextureX() {
+    return texturePosition->x;
 }
-int Tile::GetHeight() {
-    return scale->y;
+double Tile::GetTextureY() {
+    return texturePosition->y;
 }
 
 Tile::Tile() {
     this->state = 0;
     this->position = new Vector2(0, 0);
-    this->scale = new Vector2(0, 0);
+    this->texturePosition = new Vector2(0, 0);
 }
-Tile::Tile(int index, int x, int y) {
+Tile::Tile(int index) {
     this->state = Globals::GRID_TYPE[index];
-    this->position = new Vector2(x, y);
-	this->scale = new Vector2(Globals::GRID_TYPE[index] % 5, (int)Globals::GRID_TYPE[index] / 5);
+    this->position = new Vector2(0, 0);
+    this->texturePosition = new Vector2(Globals::GRID_TYPE[index] % 5, (int)Globals::GRID_TYPE[index] / 5);
+}
+Tile::Tile(int x, int y) {
+    int index = x + (y * Globals::TILE_ROWS);
+    this->state = Globals::GRID_TYPE[index];
+    this->position = new Vector2(x* Globals::TILE_SIZE, y* Globals::TILE_SIZE);
+    this->texturePosition = new Vector2((Globals::GRID_TYPE[index] % 5) * Globals::TILE_SIZE, ((int)Globals::GRID_TYPE[index] / 5) * Globals::TILE_SIZE);
 }

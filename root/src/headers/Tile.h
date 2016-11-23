@@ -15,16 +15,19 @@ public:
 	void SetState(int);
 	int GetState();
 
-	int GetX();
-	int GetY();
-	int GetWidth();
-	int GetHeight();
+	Vector2* GetPosition();
+	Vector2* GetTexturePosition();
+	double GetPositionX();
+	double GetPositionY();
+	double GetTextureX();
+	double GetTextureY();
 
 	Tile();
-	Tile(int, int, int);
+	Tile(int);
+	Tile(int, int);
 private:
 	Sprite sprite;
 	int state;
 	Vector2* position;
-	Vector2* scale;
+	Vector2* texturePosition;
 };

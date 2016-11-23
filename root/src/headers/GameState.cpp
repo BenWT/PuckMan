@@ -18,7 +18,7 @@ GameState::GameState() {
 
 	for (int y = 0; y < Globals::TILE_ROWS; y++) {
         for (int x = 0; x < Globals::TILE_ROWS; x++) {
-            Tile* t = new Tile(x + (y * Globals::TILE_ROWS), x, y);
+            Tile* t = new Tile(x, y);
             tileGrid[x + (y * Globals::TILE_ROWS)] = *t;
             delete t;
         }

@@ -6,8 +6,8 @@
 #include "Globals.h"
 
 void Sprite::CalculateRect() {
-    destRect.x = (int)(this->position->x - (this->scale->x / 2));
-    destRect.y = (int)(this->position->y - (this->scale->y / 2));
+    destRect.x = (int)(this->position->x);
+    destRect.y = (int)(this->position->y);
     destRect.w = (int)(this->scale->x);
     destRect.h = (int)(this->scale->y);
 }
@@ -27,9 +27,6 @@ Sprite::Sprite(SDL_Texture* texture, SDL_Rect srcRect, Vector2* position) {
     this->position = position;
     this->srcRect = srcRect;
 
-    this->position->x += (scale->x / 2);
-    this->position->y += (scale->y / 2);
-
     CalculateRect();
 }
 Sprite::Sprite(SDL_Texture* texture, SDL_Rect srcRect, Vector2* position, Vector2* scale) {
@@ -37,9 +34,6 @@ Sprite::Sprite(SDL_Texture* texture, SDL_Rect srcRect, Vector2* position, Vector
     this->position = position;
     this->scale = scale;
     this->srcRect = srcRect;
-
-    this->position->x += (this->scale->x / 2);
-    this->position->y += (this->scale->y / 2);
 
     CalculateRect();
 }

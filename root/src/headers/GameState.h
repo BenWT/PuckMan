@@ -11,10 +11,12 @@
 #include "Tile.h"
 
 enum MenuState { Main, Game };
+enum MoveDirection { Up, Down, Left, Right };
 
 class GameState {
 public:
 	Player playerSprite;
+	MoveDirection playerMoveDirection;
 	std::array<Tile, Globals::TILE_COUNT> tileGrid;
 
 	MenuState GetState();

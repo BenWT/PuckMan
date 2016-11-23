@@ -6,7 +6,6 @@
 
 #include <string>
 #include "SDL.h"
-//#include "Globals.h"
 #include "Vector2.h"
 
 class Sprite {
@@ -17,6 +16,7 @@ public:
 	SDL_Rect srcRect;
 	SDL_Rect destRect;
 
+	void NormalisePosition();
 	void CalculateRect();
 	void SetTexture(SDL_Texture*);
 	void Render(SDL_Renderer*);

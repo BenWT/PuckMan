@@ -6,10 +6,12 @@
 
 class Globals {
 public:
-    const static int TILE_ROWS = 7;
+    const static int TILE_ROWS = 11;
     const static int TILE_COUNT = TILE_ROWS * TILE_ROWS;
     const static int TILE_SIZE = 100;
     const static int SCORE_REGION = 0;
+    const static int ACTUAL_SCREEN_WIDTH = 800;
+    const static int ACTUAL_SCREEN_HEIGHT = 600;
     const static int SCREEN_WIDTH = TILE_SIZE * TILE_ROWS;
     const static int SCREEN_HEIGHT = SCREEN_WIDTH + SCORE_REGION;
     const static int PLAYER_START_X = 1;

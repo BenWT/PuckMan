@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
 		SDL_Log("SDL initialised successfully. \n");
 	}
 
-	SDL_CreateWindowAndRenderer(Globals::SCREEN_WIDTH, Globals::SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE, &window, &renderer);
+	SDL_CreateWindowAndRenderer(Globals::ACTUAL_SCREEN_WIDTH, Globals::ACTUAL_SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE, &window, &renderer);
 
 	// Log window failure
 	if (window == NULL || renderer == NULL) {
@@ -89,8 +89,8 @@ void InitialiseSprites() {
 		Tile t = gameState.tileGrid[i];
 		Sprite *s = new Sprite(
 			tileTexture,
-			NewRect(t.GetWidth() * Globals::TILE_SIZE, t.GetHeight() * Globals::TILE_SIZE, Globals::TILE_SIZE, Globals::TILE_SIZE),
-			new Vector2(t.GetX() * Globals::TILE_SIZE, t.GetY() * Globals::TILE_SIZE)
+			NewRect((int)(t.GetTextureX()), (int)(t.GetTextureY()), Globals::TILE_SIZE, Globals::TILE_SIZE),
+			new Vector2((int)(t.GetPositionX()), (int)(t.GetPositionY()))
 		);
 		gameState.tileGrid[i].SetSprite(*s);
 		delete s;
@@ -100,6 +100,7 @@ void InitialiseSprites() {
 	Player *p = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE));
 	p->tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
 	gameState.playerSprite = *p;
+	gameState.playerMoveDirection = Down;
 	delete p;
 }
 
@@ -111,16 +112,24 @@ void ProcessInput(bool &running) {
 		switch (event.type) {
 			case SDL_KEYDOWN:
 				if (key == SDLK_w || key == SDLK_UP) {
-					gameState.playerSprite.MoveUp();
+					if (gameState.playerSprite.MoveUp(gameState)) {
+						gameState.playerMoveDirection = Up;
+					}
 				}
 				if (key == SDLK_s || key == SDLK_DOWN) {
-					gameState.playerSprite.MoveDown();
+					if (gameState.playerSprite.MoveDown(gameState)) {
+						gameState.playerMoveDirection = Down;
+					}
 				}
 				if (key == SDLK_a || key == SDLK_LEFT) {
-					gameState.playerSprite.MoveLeft();
+					if (gameState.playerSprite.MoveLeft(gameState)) {
+						gameState.playerMoveDirection = Left;
+					}
 				}
 				if (key == SDLK_d || key == SDLK_RIGHT) {
-					gameState.playerSprite.MoveRight();
+					if (gameState.playerSprite.MoveRight(gameState)) {
+						gameState.playerMoveDirection = Right;
+					}
 				}
 				break;
 
@@ -135,7 +144,26 @@ void ProcessInput(bool &running) {
 	}
 }
 
-void Update(double &deltaTime) {  }
+void Update(double &deltaTime) {
+	// TODO create stop move, slide into wall
+	if (gameState.playerMoveDirection == Up) {
+		if (gameState.playerSprite.MoveUp(gameState)) {
+			gameState.playerSprite.DoMove(gameState, deltaTime * 150);
+		}
+	} else if (gameState.playerMoveDirection == Down) {
+		if (gameState.playerSprite.MoveDown(gameState)) {
+			gameState.playerSprite.DoMove(gameState, deltaTime * 150);
+		}
+	} else if (gameState.playerMoveDirection == Left) {
+		if (gameState.playerSprite.MoveLeft(gameState)) {
+			gameState.playerSprite.DoMove(gameState, deltaTime * 150);
+		}
+	} else if (gameState.playerMoveDirection == Right) {
+		if (gameState.playerSprite.MoveRight(gameState)) {
+			gameState.playerSprite.DoMove(gameState, deltaTime * 150);
+		}
+	}
+}
 
 void Render() {
 	// Clear Previous Render
