@@ -17,98 +17,88 @@ void Player::Render(SDL_Renderer* renderer) {
 }
 
 void Player::DoMove(GameState& gameState, double moveAmount) {
-    bool changeIndex = false;
-    bool UpDown;
-
-    if (gameState.playerMoveDirection == Up || gameState.playerMoveDirection == Down) UpDown = true;
-    else UpDown = false;
+    bool shouldChange = false;
 
     if (gameState.playerMoveDirection == Up) {
-        offsetY -= moveAmount;
-    } else if (gameState.playerMoveDirection == Down) {
-        offsetY += moveAmount;
-    } else if (gameState.playerMoveDirection == Left) {
-        offsetX -= moveAmount;
-    } else if (gameState.playerMoveDirection == Right) {
-        offsetX += moveAmount;
-    }
+        if ((tile - Globals::TILE_ROWS) >= 0) {
+            if (gameState.tileGrid[tile - Globals::TILE_ROWS].GetState() == 0) {
+                offsetY -= moveAmount;
+                offsetX = 0;
 
-    if (UpDown) {
-        if (offsetY > Globals::TILE_SIZE * 0.75) {
-            tile += Globals::TILE_ROWS;
-            offsetY -= Globals::TILE_SIZE;
-            changeIndex = true;
-        } else if (offsetY < -(Globals::TILE_SIZE * 0.5)) {
-            tile -= Globals::TILE_ROWS;
-            offsetY += Globals::TILE_SIZE;
-            changeIndex = true;
+                if (offsetY > 0.25 * Globals::TILE_SIZE) {
+                    tile += Globals::TILE_ROWS;
+                    offsetY -= Globals::TILE_SIZE;
+                    shouldChange = true;
+                } else if (offsetY < -(0.25 * Globals::TILE_SIZE)) {
+                    tile -= Globals::TILE_ROWS;
+                    offsetY += Globals::TILE_SIZE;
+                    shouldChange = true;
+                }
+            } else {
+                offsetX = 0;
+                offsetY = 0;
+            }
         }
+    } else if (gameState.playerMoveDirection == Down) {
+        if ((tile + Globals::TILE_ROWS) >= 0) {
+            if (gameState.tileGrid[tile + Globals::TILE_ROWS].GetState() == 0) {
+                offsetY += moveAmount;
+                offsetX = 0;
 
-        if (offsetX > 2) {
-            offsetY -= moveAmount;
-        } else if (offsetX < -2) {
-            offsetX += moveAmount;
+                if (offsetY > 0.25 * Globals::TILE_SIZE) {
+                    tile += Globals::TILE_ROWS;
+                    offsetY -= Globals::TILE_SIZE;
+                    shouldChange = true;
+                } else if (offsetY < -(0.25 * Globals::TILE_SIZE)) {
+                    tile -= Globals::TILE_ROWS;
+                    offsetY += Globals::TILE_SIZE;
+                    shouldChange = true;
+                }
+            } else {
+                offsetX = 0;
+                offsetY = 0;
+            }
+        }
+    } else if (gameState.playerMoveDirection == Left) {
+        if (gameState.tileGrid[tile - 1].GetState() == 0) {
+            offsetX -= moveAmount;
+            offsetY = 0;
+
+            if (offsetX > 0.25 * Globals::TILE_SIZE) {
+                tile += 1;
+                offsetX -= Globals::TILE_SIZE;
+                shouldChange = true;
+            } else if (offsetX < -(0.25 * Globals::TILE_SIZE)) {
+                tile -= 1;
+                offsetX += Globals::TILE_SIZE;
+                shouldChange = true;
+            }
         } else {
             offsetX = 0;
+            offsetY = 0;
         }
-    } else {
-        if (offsetX > Globals::TILE_SIZE * 0.5) {
-            tile += 1;
-            offsetX -= Globals::TILE_SIZE;
-            changeIndex = true;
-        } else if (offsetX < -(Globals::TILE_SIZE * 0.5)) {
-            tile -= 1;
-            offsetX += Globals::TILE_SIZE;
-            changeIndex = true;
-        }
+    } else if (gameState.playerMoveDirection == Right) {
+        if (gameState.tileGrid[tile + 1].GetState() == 0) {
+            offsetX += moveAmount;
+            offsetY = 0;
 
-        if (offsetY > 2) {
-            offsetY -= moveAmount;
-        } else if (offsetY < -2) {
-            offsetY += moveAmount;
+            if (offsetX > 0.25 * Globals::TILE_SIZE) {
+                tile += 1;
+                offsetX -= Globals::TILE_SIZE;
+                shouldChange = true;
+            } else if (offsetX < -(0.25 * Globals::TILE_SIZE)) {
+                tile -= 1;
+                offsetX += Globals::TILE_SIZE;
+                shouldChange = true;
+            }
         } else {
+            offsetX = 0;
             offsetY = 0;
         }
     }
 
-    if (changeIndex) {
+    if (shouldChange) {
         position = gameState.tileGrid[tile].GetPosition();
+        CalculateRect();
     }
-
-    CalculateRect();
-}
-
-bool Player::MoveUp(GameState& gameState) {
-    return Move(tile - Globals::TILE_ROWS, true, gameState);
-}
-bool Player::MoveDown(GameState& gameState) {
-    return Move(tile + Globals::TILE_ROWS, true, gameState);
-}
-bool Player::MoveLeft(GameState& gameState) {
-    return Move(tile - 1, false, gameState);
-}
-bool Player::MoveRight(GameState& gameState) {
-    return Move(tile + 1, false, gameState);
-}
-
-bool Player::Move(int i, bool upDown, GameState& gameState) {
-    if (tileExists(i)) {
-        if (!tileHasCollider(gameState.tileGrid[i])) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool Player::tileExists(int i) {
-    if (i >= 0 && i < Globals::TILE_COUNT) {
-        return true;
-    }
-    return false;
-}
-bool Player::tileHasCollider(Tile& t) {
-    if (t.GetState() == 0) {
-        return false;
-    }
-    return true;
 }

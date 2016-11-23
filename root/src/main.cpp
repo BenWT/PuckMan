@@ -112,24 +112,16 @@ void ProcessInput(bool &running) {
 		switch (event.type) {
 			case SDL_KEYDOWN:
 				if (key == SDLK_w || key == SDLK_UP) {
-					if (gameState.playerSprite.MoveUp(gameState)) {
-						gameState.playerMoveDirection = Up;
-					}
+					gameState.playerMoveDirection = Up;
 				}
 				if (key == SDLK_s || key == SDLK_DOWN) {
-					if (gameState.playerSprite.MoveDown(gameState)) {
-						gameState.playerMoveDirection = Down;
-					}
+					gameState.playerMoveDirection = Down;
 				}
 				if (key == SDLK_a || key == SDLK_LEFT) {
-					if (gameState.playerSprite.MoveLeft(gameState)) {
-						gameState.playerMoveDirection = Left;
-					}
+					gameState.playerMoveDirection = Left;
 				}
 				if (key == SDLK_d || key == SDLK_RIGHT) {
-					if (gameState.playerSprite.MoveRight(gameState)) {
-						gameState.playerMoveDirection = Right;
-					}
+					gameState.playerMoveDirection = Right;
 				}
 				break;
 
@@ -145,23 +137,14 @@ void ProcessInput(bool &running) {
 }
 
 void Update(double &deltaTime) {
-	// TODO create stop move, slide into wall
 	if (gameState.playerMoveDirection == Up) {
-		if (gameState.playerSprite.MoveUp(gameState)) {
-			gameState.playerSprite.DoMove(gameState, deltaTime * 150);
-		}
+		gameState.playerSprite.DoMove(gameState, deltaTime * 150);
 	} else if (gameState.playerMoveDirection == Down) {
-		if (gameState.playerSprite.MoveDown(gameState)) {
-			gameState.playerSprite.DoMove(gameState, deltaTime * 150);
-		}
+		gameState.playerSprite.DoMove(gameState, deltaTime * 150);
 	} else if (gameState.playerMoveDirection == Left) {
-		if (gameState.playerSprite.MoveLeft(gameState)) {
-			gameState.playerSprite.DoMove(gameState, deltaTime * 150);
-		}
+		gameState.playerSprite.DoMove(gameState, deltaTime * 150);
 	} else if (gameState.playerMoveDirection == Right) {
-		if (gameState.playerSprite.MoveRight(gameState)) {
-			gameState.playerSprite.DoMove(gameState, deltaTime * 150);
-		}
+		gameState.playerSprite.DoMove(gameState, deltaTime * 150);
 	}
 }
 
