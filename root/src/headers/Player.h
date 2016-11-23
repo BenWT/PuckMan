@@ -19,4 +19,7 @@ public:
 	void Render(SDL_Renderer* renderer); // overwrite Render
 
 private:
+	bool tileExists(int);
+	bool clampOffset(bool, double);
+	double returnToZero(double&, double);
 };
