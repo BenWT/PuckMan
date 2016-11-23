@@ -8,18 +8,22 @@
 #include "Tile.h"
 
 class GameState;
+enum MoveDirection;
 class Player : public Sprite {
 public:
 	int tile;
 	double offsetX = 0;
 	double offsetY = 0;
 
-	void DoMove(GameState&, double);
+	bool CanMove(GameState&, MoveDirection);
+	void DoMove(GameState&, bool, int, double);
+	void Reset(double);
 	using Sprite::Sprite; // inherit constructors
 	void Render(SDL_Renderer* renderer); // overwrite Render
 
 private:
+	int getNextIndex(MoveDirection);
 	bool tileExists(int);
-	bool clampOffset(bool, double);
-	double returnToZero(double&, double);
+	bool clampOffset(bool);
+	void returnToZero(double&, double);
 };

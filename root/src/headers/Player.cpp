@@ -16,56 +16,68 @@ void Player::Render(SDL_Renderer* renderer) {
     SDL_RenderCopy(renderer, texture, (srcRect.w == -1) ? NULL : &srcRect, &drawRect);
 }
 
+bool Player::CanMove(GameState& gameState, MoveDirection direction) {
+    int i = getNextIndex(direction);
+
+    if (tileExists(i)) {
+        if (gameState.tileGrid[i].GetState() == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 //TODO continue up to collider
-void Player::DoMove(GameState& gameState, double moveAmount) {
-    double offset = 0.25;
-    bool shouldChange = false;
+void Player::DoMove(GameState& gameState, bool upDown, int direction, double moveAmount) {
+    int i = getNextIndex(gameState.playerMoveDirection);
 
-    if (gameState.playerMoveDirection == Up) {
-        int i = tile - Globals::TILE_ROWS;
-
-        if (tileExists(i)) {
-            if (gameState.tileGrid[i].GetState() == 0) {
-                offsetY -= moveAmount;
+    if (tileExists(i)) {
+        if (gameState.tileGrid[i].GetState() == 0) {
+            if (upDown) {
+                offsetY += moveAmount * direction;
                 returnToZero(offsetX, moveAmount);
-                if (clampOffset(true, moveAmount)) shouldChange = true;
-            }
-        }
-    } else if (gameState.playerMoveDirection == Down) {
-        int i = tile + Globals::TILE_ROWS;
-
-        if (tileExists(i)) {
-            if (gameState.tileGrid[tile + Globals::TILE_ROWS].GetState() == 0) {
-                offsetY += moveAmount;
-                returnToZero(offsetX, moveAmount);
-                if (clampOffset(true, moveAmount)) shouldChange = true;
-            }
-        }
-    } else if (gameState.playerMoveDirection == Left) {
-        int i = tile - 1;
-
-        if (tileExists(i)) {
-            if (gameState.tileGrid[tile - 1].GetState() == 0) {
-                offsetX -= moveAmount;
+            } else {
+                offsetX += moveAmount * direction;
                 returnToZero(offsetY, moveAmount);
-                if (clampOffset(false, moveAmount)) shouldChange = true;
             }
-        }
-    } else if (gameState.playerMoveDirection == Right) {
-        int i = tile + 1;
-        if (tileExists(i)) {
-            if (gameState.tileGrid[tile + 1].GetState() == 0) {
-                offsetX += moveAmount;
-                returnToZero(offsetY, moveAmount);
-                if (clampOffset(false, moveAmount)) shouldChange = true;
+
+            if (clampOffset(upDown)) {
+                position = gameState.tileGrid[tile].GetPosition();
+                CalculateRect();
             }
+        } else {
+            Reset(moveAmount);
         }
     }
+}
 
-    if (shouldChange) {
-        position = gameState.tileGrid[tile].GetPosition();
-        CalculateRect();
+void Player::Reset(double deltaTime) {
+    returnToZero(offsetX, deltaTime);
+    returnToZero(offsetY, deltaTime);
+}
+
+int Player::getNextIndex(MoveDirection direction) {
+    int i = -1;
+
+    switch (direction) {
+        case 0:
+            i = tile - Globals::TILE_ROWS;
+            break;
+        case 1:
+            i = tile + Globals::TILE_ROWS;
+            break;
+        case 2:
+            i = tile - 1;
+            break;
+        case 3:
+            i = tile + 1;
+            break;
+        default:
+            i = -1;
+            break;
     }
+
+    return i;
 }
 
 bool Player::tileExists(int index) {
@@ -75,8 +87,8 @@ bool Player::tileExists(int index) {
     return false;
 }
 
-bool Player::clampOffset(bool upDown, double deltaTime) {
-    double offsetValue = 0.75;
+bool Player::clampOffset(bool upDown) {
+    double offsetValue = 0.5;
 
     if (upDown) {
         if (offsetY > Globals::TILE_SIZE * offsetValue) {
@@ -103,15 +115,14 @@ bool Player::clampOffset(bool upDown, double deltaTime) {
 }
 
 // TODO returnToZero needs smoothing
-double Player::returnToZero(double& value, double deltaTime) {
+void Player::returnToZero(double& value, double deltaTime) {
     if (value == 0.0) {
-        return 0.0;
+        value = 0.0;
     } else if (value > 0.0) {
         value -= deltaTime;
-        if (value < 0.0) return 0.0;
+        if (value < 0.0) value = 0.0;
     } else if (value < 0.0) {
         value += deltaTime;
-        if (value > 0.0) return 0.0;
+        if (value > 0.0) value = 0.0;
     }
-    return value;
 }

@@ -112,16 +112,20 @@ void ProcessInput(bool &running) {
 		switch (event.type) {
 			case SDL_KEYDOWN:
 				if (key == SDLK_w || key == SDLK_UP) {
-					gameState.playerMoveDirection = Up;
+					if (gameState.playerSprite.CanMove(gameState, Up))
+						gameState.playerMoveDirection = Up;
 				}
 				if (key == SDLK_s || key == SDLK_DOWN) {
-					gameState.playerMoveDirection = Down;
+					if (gameState.playerSprite.CanMove(gameState, Down))
+						gameState.playerMoveDirection = Down;
 				}
 				if (key == SDLK_a || key == SDLK_LEFT) {
-					gameState.playerMoveDirection = Left;
+					if (gameState.playerSprite.CanMove(gameState, Left))
+						gameState.playerMoveDirection = Left;
 				}
 				if (key == SDLK_d || key == SDLK_RIGHT) {
-					gameState.playerMoveDirection = Right;
+					if (gameState.playerSprite.CanMove(gameState, Right))
+						gameState.playerMoveDirection = Right;
 				}
 				break;
 
@@ -138,13 +142,13 @@ void ProcessInput(bool &running) {
 
 void Update(double &deltaTime) {
 	if (gameState.playerMoveDirection == Up) {
-		gameState.playerSprite.DoMove(gameState, deltaTime * 150);
+		gameState.playerSprite.DoMove(gameState, true, -1, deltaTime * 250);
 	} else if (gameState.playerMoveDirection == Down) {
-		gameState.playerSprite.DoMove(gameState, deltaTime * 150);
+		gameState.playerSprite.DoMove(gameState, true, 1, deltaTime * 250);
 	} else if (gameState.playerMoveDirection == Left) {
-		gameState.playerSprite.DoMove(gameState, deltaTime * 150);
+		gameState.playerSprite.DoMove(gameState, false, -1, deltaTime * 250);
 	} else if (gameState.playerMoveDirection == Right) {
-		gameState.playerSprite.DoMove(gameState, deltaTime * 150);
+		gameState.playerSprite.DoMove(gameState, false, 1, deltaTime * 250);
 	}
 }
 
