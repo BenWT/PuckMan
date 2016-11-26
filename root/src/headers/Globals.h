@@ -4,6 +4,9 @@
 
 #pragma once
 
+enum MenuState { Main, Game };
+enum MoveDirection { Up, Down, Left, Right };
+
 class Globals {
 public:
     const static int TILE_ROWS = 11;

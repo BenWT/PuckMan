@@ -10,9 +10,6 @@
 #include "Sprite.h"
 #include "Tile.h"
 
-enum MenuState { Main, Game };
-enum MoveDirection { Up, Down, Left, Right };
-
 class GameState {
 public:
 	Player playerSprite;
