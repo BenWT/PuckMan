@@ -4,11 +4,11 @@
 
 #pragma once
 
+#include "Globals.h"
 #include "Sprite.h"
 #include "Tile.h"
 
 class GameState;
-enum MoveDirection;
 class Player : public Sprite {
 public:
 	int tile;
