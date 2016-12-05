@@ -20,19 +20,20 @@ bool Player::CanMove(GameState& gameState, MoveDirection direction) {
     int i = getNextIndex(direction);
 
     if (tileExists(i)) {
-        if (gameState.tileGrid[i].GetState() == 0) {
+        int state = gameState.tileGrid[i].GetState();
+        if (state == 0 || state == -1) {
             return true;
         }
     }
     return false;
 }
 
-//TODO continue up to collider
 void Player::DoMove(GameState& gameState, bool upDown, int direction, double moveAmount) {
     int i = getNextIndex(gameState.playerMoveDirection);
 
     if (tileExists(i)) {
-        if (gameState.tileGrid[i].GetState() == 0) {
+        int state = gameState.tileGrid[i].GetState();
+        if (state == 0 || state == -1) {
             if (upDown) {
                 offsetY += moveAmount * direction;
                 returnToZero(offsetX, moveAmount);
@@ -41,7 +42,7 @@ void Player::DoMove(GameState& gameState, bool upDown, int direction, double mov
                 returnToZero(offsetY, moveAmount);
             }
 
-            if (clampOffset(upDown)) {
+            if (clampOffset(upDown, gameState)) {
                 position = gameState.tileGrid[tile].GetPosition();
                 CalculateRect();
             }
@@ -87,34 +88,43 @@ bool Player::tileExists(int index) {
     return false;
 }
 
-bool Player::clampOffset(bool upDown) {
+bool Player::clampOffset(bool upDown, GameState& gameState) {
     double offsetValue = 0.5;
+    bool hasChanged = false;
 
     if (upDown) {
         if (offsetY > Globals::TILE_SIZE * offsetValue) {
             tile += Globals::TILE_ROWS;
             offsetY -= Globals::TILE_SIZE;
-            return true;
+            hasChanged = true;
         } else if (offsetY < -(Globals::TILE_SIZE * offsetValue)) {
             tile -= Globals::TILE_ROWS;
             offsetY += Globals::TILE_SIZE;
-            return true;
+            hasChanged = true;
         }
     } else {
         if (offsetX > Globals::TILE_SIZE * offsetValue) {
             tile++;
             offsetX -= Globals::TILE_SIZE;
-            return true;
+            hasChanged = true;
         } else if (offsetX < -(Globals::TILE_SIZE * offsetValue)) {
             tile--;
             offsetX += Globals::TILE_SIZE;
-            return true;
+            hasChanged = true;
         }
     }
+
+    if (hasChanged) {
+        if (gameState.tileGrid[tile].CheckBiscuit()) {
+            gameState.tileGrid[tile].EatBiscuit();
+            gameState.IncreaseScore();
+        }
+        return true;
+    }
+
     return false;
 }
 
-// TODO returnToZero needs smoothing
 void Player::returnToZero(double& value, double deltaTime) {
     if (value == 0.0) {
         value = 0.0;

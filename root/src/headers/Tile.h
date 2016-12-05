@@ -15,19 +15,23 @@ public:
 	void SetState(int);
 	int GetState();
 
+	bool CheckBiscuit();
+	void EatBiscuit();
+
 	Vector2* GetPosition();
 	Vector2* GetTexturePosition();
+	void SetTexturePosition(int);
 	double GetPositionX();
 	double GetPositionY();
 	double GetTextureX();
 	double GetTextureY();
 
 	Tile();
-	Tile(int);
 	Tile(int, int);
 private:
 	Sprite sprite;
 	int state;
+	bool hasBiscuit = false;
 	Vector2* position;
 	Vector2* texturePosition;
 };

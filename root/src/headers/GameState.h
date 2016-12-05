@@ -16,11 +16,14 @@ enum MoveDirection { Up, Down, Left, Right };
 class GameState {
 public:
 	Player playerSprite;
+	int playerScore;
 	MoveDirection playerMoveDirection;
 	std::array<Tile, Globals::TILE_COUNT> tileGrid;
+	SDL_Texture* biscuitTexture;
 
 	MenuState GetState();
 	void SetState(MenuState);
+	void IncreaseScore();
 	GameState();
 private:
 	MenuState state;

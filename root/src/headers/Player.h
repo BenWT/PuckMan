@@ -24,6 +24,6 @@ public:
 private:
 	int getNextIndex(MoveDirection);
 	bool tileExists(int);
-	bool clampOffset(bool);
+	bool clampOffset(bool, GameState&);
 	void returnToZero(double&, double);
 };

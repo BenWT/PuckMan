@@ -2,6 +2,7 @@
 // Copyright (c) 2016 by Ben Townshend. All Rights Reserved.
 //
 
+#include <iostream>
 #include "GameState.h"
 #include "Globals.h"
 
@@ -13,7 +14,13 @@ void GameState::SetState(MenuState state) {
     this->state = state;
 }
 
+void GameState::IncreaseScore() {
+    playerScore += 50;
+    std::cout << "Score: " << playerScore << std::endl;
+}
+
 GameState::GameState() {
+    this->playerScore = 0;
     this->state = Game;
 
 	for (int y = 0; y < Globals::TILE_ROWS; y++) {

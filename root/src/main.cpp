@@ -32,8 +32,8 @@ double TimeSinceLastFrame(high_resolution_clock::time_point frameTime) {
 }
 
 // Global Variables
-SDL_Window *window;
-SDL_Renderer *renderer;
+SDL_Window* window;
+SDL_Renderer* renderer;
 
 GameState gameState;
 
@@ -79,13 +79,17 @@ void InitialiseSprites() {
 	// Surfaces
 	SDL_Surface* playerSurface = SDL_LoadBMP("assets/character.bmp");
 	SDL_Surface* tileSurface = SDL_LoadBMP("assets/tiles.bmp");
+	SDL_Surface* biscuitSurface = SDL_LoadBMP("assets/biscuit.bmp");
 
 	// Textures
 	SDL_Texture* playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
 	SDL_Texture* tileTexture = SDL_CreateTextureFromSurface(renderer, tileSurface);
+	gameState.biscuitTexture = SDL_CreateTextureFromSurface(renderer, biscuitSurface);
 
 	// Tile Textures
 	for (int i = 0; i < Globals::TILE_COUNT; i++) {
+
+
 		Tile t = gameState.tileGrid[i];
 		Sprite *s = new Sprite(
 			tileTexture,
@@ -161,6 +165,11 @@ void Render() {
 		for (int i = 0; i < Globals::TILE_COUNT; i++) {
 			Sprite s = gameState.tileGrid[i].GetSprite();
 			s.Render(renderer);
+
+			if (gameState.tileGrid[i].CheckBiscuit()) {
+				SDL_Rect biscuitRect = { gameState.tileGrid[i].GetPositionX() + 40, gameState.tileGrid[i].GetPositionY() + 40, 20, 20 };
+				SDL_RenderCopy(renderer, gameState.biscuitTexture, NULL, &biscuitRect);
+			}
 		}
 
 		// Player Sprite
