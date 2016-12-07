@@ -34,11 +34,12 @@ Vector2* Tile::GetTexturePosition() {
 }
 void Tile::SetTexturePosition(int index) {
     if (Globals::GRID_TYPE[index] == -1) {
-        index = 0;
         this->hasBiscuit = true;
         this->texturePosition = new Vector2(0, 0);
     } else {
-        this->texturePosition = new Vector2((Globals::GRID_TYPE[index] % 5) * Globals::TILE_SIZE, ((int)Globals::GRID_TYPE[index] / 5) * Globals::TILE_SIZE);
+		int x = (Globals::GRID_TYPE[index] % 5) * Globals::TILE_SIZE;
+		int y = (Globals::GRID_TYPE[index] / 5) * Globals::TILE_SIZE;
+        this->texturePosition = new Vector2(x, y);
     }
 }
 double Tile::GetPositionX() {

@@ -43,8 +43,7 @@ void Player::DoMove(GameState& gameState, bool upDown, int direction, double mov
             }
 
             if (clampOffset(upDown, gameState)) {
-                position = gameState.tileGrid[tile].GetPosition();
-                CalculateRect();
+                SetPositionFromTile(gameState);
             }
         } else {
             Reset(moveAmount);
@@ -55,6 +54,11 @@ void Player::DoMove(GameState& gameState, bool upDown, int direction, double mov
 void Player::Reset(double deltaTime) {
     returnToZero(offsetX, deltaTime);
     returnToZero(offsetY, deltaTime);
+}
+
+void Player::SetPositionFromTile(GameState& gameState) {
+	position = gameState.tileGrid[tile].GetPosition();
+	CalculateRect();
 }
 
 int Player::getNextIndex(MoveDirection direction) {

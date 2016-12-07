@@ -88,8 +88,6 @@ void InitialiseSprites() {
 
 	// Tile Textures
 	for (int i = 0; i < Globals::TILE_COUNT; i++) {
-
-
 		Tile t = gameState.tileGrid[i];
 		Sprite *s = new Sprite(
 			tileTexture,
@@ -103,8 +101,9 @@ void InitialiseSprites() {
 	// Player Textures
 	Player *p = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE));
 	p->tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
+	p->SetPositionFromTile(gameState);
 	gameState.playerSprite = *p;
-	gameState.playerMoveDirection = Down;
+	gameState.playerMoveDirection = Left;
 	delete p;
 }
 
@@ -167,7 +166,9 @@ void Render() {
 			s.Render(renderer);
 
 			if (gameState.tileGrid[i].CheckBiscuit()) {
-				SDL_Rect biscuitRect = { gameState.tileGrid[i].GetPositionX() + 40, gameState.tileGrid[i].GetPositionY() + 40, 20, 20 };
+				int xPos = gameState.tileGrid[i].GetPositionX() + 40;
+				int yPos = gameState.tileGrid[i].GetPositionY() + 40;
+				SDL_Rect biscuitRect = { xPos, yPos, 20, 20 };
 				SDL_RenderCopy(renderer, gameState.biscuitTexture, NULL, &biscuitRect);
 			}
 		}

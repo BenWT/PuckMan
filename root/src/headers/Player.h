@@ -18,8 +18,9 @@ public:
 	bool CanMove(GameState&, MoveDirection);
 	void DoMove(GameState&, bool, int, double);
 	void Reset(double);
-	using Sprite::Sprite; // inherit constructors
 	void Render(SDL_Renderer* renderer); // overwrite Render
+	void SetPositionFromTile(GameState&);
+	using Sprite::Sprite; // inherit constructors
 
 private:
 	int getNextIndex(MoveDirection);
