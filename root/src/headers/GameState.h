@@ -13,14 +13,12 @@
 class GameState {
 public:
 	Player playerSprite;
-	int playerScore;
-	MoveDirection playerMoveDirection;
+	Player playerTwoSprite;
 	std::array<Tile, Globals::TILE_COUNT> tileGrid;
 	SDL_Texture* biscuitTexture;
 
 	MenuState GetState();
 	void SetState(MenuState);
-	void IncreaseScore();
 	GameState();
 private:
 	MenuState state;

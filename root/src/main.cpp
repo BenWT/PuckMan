@@ -99,12 +99,18 @@ void InitialiseSprites() {
 	}
 
 	// Player Textures
-	Player *p = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE));
-	p->tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
-	p->SetPositionFromTile(gameState);
-	gameState.playerSprite = *p;
-	gameState.playerMoveDirection = Left;
-	delete p;
+	Player *p1 = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE));
+	Player *p2 = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE));
+	p1->tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
+	p2->tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
+	p1->SetPositionFromTile(gameState);
+	p2->SetPositionFromTile(gameState);
+	p1->moveDirection = Left;
+	p2->moveDirection = Right;
+	gameState.playerSprite = *p1;
+	gameState.playerTwoSprite = *p2;
+	delete p1;
+	delete p2;
 }
 
 void ProcessInput(bool &running) {
@@ -114,21 +120,35 @@ void ProcessInput(bool &running) {
 
 		switch (event.type) {
 			case SDL_KEYDOWN:
-				if (key == SDLK_w || key == SDLK_UP) {
-					if (gameState.playerSprite.CanMove(gameState, Up))
-						gameState.playerMoveDirection = Up;
+				if (key == SDLK_w) {
+					if (gameState.playerSprite.CanMove(gameState, Up)) gameState.playerSprite.moveDirection = Up;
 				}
-				if (key == SDLK_s || key == SDLK_DOWN) {
-					if (gameState.playerSprite.CanMove(gameState, Down))
-						gameState.playerMoveDirection = Down;
+				if (key == SDLK_s) {
+					if (gameState.playerSprite.CanMove(gameState, Down)) gameState.playerSprite.moveDirection = Down;
 				}
-				if (key == SDLK_a || key == SDLK_LEFT) {
-					if (gameState.playerSprite.CanMove(gameState, Left))
-						gameState.playerMoveDirection = Left;
+				if (key == SDLK_a) {
+					if (gameState.playerSprite.CanMove(gameState, Left)) gameState.playerSprite.moveDirection = Left;
 				}
-				if (key == SDLK_d || key == SDLK_RIGHT) {
-					if (gameState.playerSprite.CanMove(gameState, Right))
-						gameState.playerMoveDirection = Right;
+				if (key == SDLK_d) {
+					if (gameState.playerSprite.CanMove(gameState, Right)) gameState.playerSprite.moveDirection = Right;
+				}
+
+				if (key == SDLK_UP) {
+					if (gameState.playerTwoSprite.CanMove(gameState, Up)) gameState.playerTwoSprite.moveDirection = Up;
+				}
+				if (key == SDLK_DOWN) {
+					if (gameState.playerTwoSprite.CanMove(gameState, Down)) gameState.playerTwoSprite.moveDirection = Down;
+				}
+				if (key == SDLK_LEFT) {
+					if (gameState.playerTwoSprite.CanMove(gameState, Left)) gameState.playerTwoSprite.moveDirection = Left;
+				}
+				if (key == SDLK_RIGHT) {
+					if (gameState.playerTwoSprite.CanMove(gameState, Right)) gameState.playerTwoSprite.moveDirection = Right;
+				}
+
+				if (key == SDLK_ESCAPE) {
+					SDL_Log("Program quit.");
+		 		    running = false;
 				}
 				break;
 
@@ -144,37 +164,33 @@ void ProcessInput(bool &running) {
 }
 
 void Update(double &deltaTime) {
-	if (gameState.playerMoveDirection == Up) {
-		gameState.playerSprite.DoMove(gameState, true, -1, deltaTime * 250);
-	} else if (gameState.playerMoveDirection == Down) {
-		gameState.playerSprite.DoMove(gameState, true, 1, deltaTime * 250);
-	} else if (gameState.playerMoveDirection == Left) {
-		gameState.playerSprite.DoMove(gameState, false, -1, deltaTime * 250);
-	} else if (gameState.playerMoveDirection == Right) {
-		gameState.playerSprite.DoMove(gameState, false, 1, deltaTime * 250);
-	}
+	gameState.playerSprite.DoMove(gameState, deltaTime * 250);
+	gameState.playerTwoSprite.DoMove(gameState, deltaTime * 250);
 }
 
 void Render() {
-	// Clear Previous Render
-	SDL_RenderClear(renderer);
+	SDL_RenderClear(renderer); // Clear Previous Render
 
-	if (gameState.GetState() == Game) {
+	if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
+
 		// Tile Sprites
 		for (int i = 0; i < Globals::TILE_COUNT; i++) {
-			Sprite s = gameState.tileGrid[i].GetSprite();
+			Tile t = gameState.tileGrid[i];
+			Sprite s = t.GetSprite();
+
 			s.Render(renderer);
 
-			if (gameState.tileGrid[i].CheckBiscuit()) {
-				int xPos = gameState.tileGrid[i].GetPositionX() + 40;
-				int yPos = gameState.tileGrid[i].GetPositionY() + 40;
-				SDL_Rect biscuitRect = { xPos, yPos, 20, 20 };
+			if (t.CheckBiscuit()) {
+				int posX = t.GetPositionX() + 40;
+				int posY = t.GetPositionY() + 40;
+
+				SDL_Rect biscuitRect = { posX, posY, 20, 20 };
 				SDL_RenderCopy(renderer, gameState.biscuitTexture, NULL, &biscuitRect);
 			}
 		}
 
-		// Player Sprite
-		gameState.playerSprite.Render(renderer);
+		gameState.playerSprite.Render(renderer); // Player Sprite
+		if (gameState.GetState() == TwoPlayer) gameState.playerTwoSprite.Render(renderer); // Second Player Sprite
 	}
 
 	// Finalise Render

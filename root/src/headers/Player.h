@@ -11,12 +11,15 @@
 class GameState;
 class Player : public Sprite {
 public:
+	// TODO : Swap MoveDirection from GameState to Player
+	MoveDirection moveDirection;
+	int score = 0;
 	int tile;
 	double offsetX = 0;
 	double offsetY = 0;
 
 	bool CanMove(GameState&, MoveDirection);
-	void DoMove(GameState&, bool, int, double);
+	void DoMove(GameState&, double);
 	void Reset(double);
 	void Render(SDL_Renderer* renderer); // overwrite Render
 	void SetPositionFromTile(GameState&);
@@ -25,6 +28,6 @@ public:
 private:
 	int getNextIndex(MoveDirection);
 	bool tileExists(int);
-	bool clampOffset(bool, GameState&);
+	bool clampOffset(GameState&);
 	void returnToZero(double&, double);
 };

@@ -20,29 +20,35 @@ bool Player::CanMove(GameState& gameState, MoveDirection direction) {
     int i = getNextIndex(direction);
 
     if (tileExists(i)) {
-        int state = gameState.tileGrid[i].GetState();
-        if (state == 0 || state == -1) {
+        int s = gameState.tileGrid[i].GetState();
+        if (s == 0 || s == -1) {
             return true;
         }
     }
     return false;
 }
 
-void Player::DoMove(GameState& gameState, bool upDown, int direction, double moveAmount) {
-    int i = getNextIndex(gameState.playerMoveDirection);
+void Player::DoMove(GameState& gameState, double moveAmount) {
+    int i = getNextIndex(moveDirection);
 
     if (tileExists(i)) {
         int state = gameState.tileGrid[i].GetState();
         if (state == 0 || state == -1) {
-            if (upDown) {
-                offsetY += moveAmount * direction;
-                returnToZero(offsetX, moveAmount);
-            } else {
-                offsetX += moveAmount * direction;
-                returnToZero(offsetY, moveAmount);
-            }
+			if (moveDirection == Up) {
+				offsetY -= moveAmount;
+				returnToZero(offsetX, moveAmount);
+			} else if (moveDirection == Down) {
+				offsetY += moveAmount;
+				returnToZero(offsetX, moveAmount);
+			} else if (moveDirection == Left) {
+				offsetX -= moveAmount;
+				returnToZero(offsetY, moveAmount);
+			} else if (moveDirection == Right) {
+				offsetX += moveAmount;
+				returnToZero(offsetY, moveAmount);
+			}
 
-            if (clampOffset(upDown, gameState)) {
+            if (clampOffset(gameState)) {
                 SetPositionFromTile(gameState);
             }
         } else {
@@ -92,9 +98,11 @@ bool Player::tileExists(int index) {
     return false;
 }
 
-bool Player::clampOffset(bool upDown, GameState& gameState) {
-    double offsetValue = 0.5;
+bool Player::clampOffset(GameState& gameState) {
+	double offsetValue = 0.50;
     bool hasChanged = false;
+	bool upDown = true;
+	if (moveDirection == Left || moveDirection == Right) upDown = false;
 
     if (upDown) {
         if (offsetY > Globals::TILE_SIZE * offsetValue) {
@@ -121,7 +129,7 @@ bool Player::clampOffset(bool upDown, GameState& gameState) {
     if (hasChanged) {
         if (gameState.tileGrid[tile].CheckBiscuit()) {
             gameState.tileGrid[tile].EatBiscuit();
-            gameState.IncreaseScore();
+            score += Globals::BISCUIT_SCORE;
         }
         return true;
     }

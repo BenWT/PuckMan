@@ -14,14 +14,8 @@ void GameState::SetState(MenuState state) {
     this->state = state;
 }
 
-void GameState::IncreaseScore() {
-    playerScore += 50;
-    std::cout << "Score: " << playerScore << std::endl;
-}
-
 GameState::GameState() {
-    this->playerScore = 0;
-    this->state = Game;
+    this->state = TwoPlayer; // TODO : Default to Menu
 
 	for (int y = 0; y < Globals::TILE_ROWS; y++) {
         for (int x = 0; x < Globals::TILE_ROWS; x++) {
