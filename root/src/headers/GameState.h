@@ -17,6 +17,9 @@ public:
 	std::array<Tile, Globals::TILE_COUNT> tileGrid;
 	SDL_Texture* biscuitTexture;
 
+	int mouseX = 0;
+	int mouseY = 0;
+
 	MenuState GetState();
 	void SetState(MenuState);
 	GameState();

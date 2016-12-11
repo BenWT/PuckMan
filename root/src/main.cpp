@@ -35,7 +35,6 @@ double TimeSinceLastFrame(high_resolution_clock::time_point frameTime) {
 // Global Variables
 SDL_Window* window;
 SDL_Renderer* renderer;
-
 GameState gameState;
 
 int main(int argc, char *argv[]) {
@@ -120,6 +119,17 @@ void ProcessInput(bool &running) {
 		SDL_Keycode key = event.key.keysym.sym;
 
 		switch (event.type) {
+			case SDL_MOUSEMOTION:
+				gameState.mouseX = event.motion.x;
+				gameState.mouseY = event.motion.y;
+				break;
+
+			case SDL_MOUSEBUTTONDOWN:
+				if(event.button.button == SDL_BUTTON_LEFT) {
+					
+				}
+				break;
+
 			case SDL_KEYDOWN:
 				if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
 					if (key == SDLK_w) {

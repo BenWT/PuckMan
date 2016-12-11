@@ -9,7 +9,9 @@
 
 class FontSprite : public Sprite {
 public:
-	std::string text;
+	bool selected = false;
+	std::string text = "";
+	SDL_Texture* selectedTexture;
 
 	void Render(SDL_Renderer*);
 	int getFontRow(char);
