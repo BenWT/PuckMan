@@ -8,7 +8,8 @@ conan_basic_setup()
 
 add_executable(${PROJECT_NAME}
 	src/main.cpp
-	src/headers/Fonts.h
+	src/headers/FontSprite.cpp
+	src/headers/FontSprite.h
 	src/headers/GameState.cpp
 	src/headers/GameState.h
 	src/headers/Globals.cpp

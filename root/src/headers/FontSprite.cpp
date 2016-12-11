@@ -1,4 +1,21 @@
-static int getFontRow(char c) {
+//
+// Copyright (c) 2016 by Ben Townshend. All Rights Reserved.
+//
+
+#include "FontSprite.h"
+#include "Globals.h"
+
+void FontSprite::Render(SDL_Renderer* renderer) {
+	for(char& c : text) {
+		srcRect.x = getFontColumn(c) * Globals::FONT_SIZE;
+		srcRect.y = getFontRow(c) * Globals::FONT_SIZE;
+
+	    SDL_RenderCopy(renderer, texture, &src, &destRect);
+		destRect.x += destRect.w;
+	}
+}
+
+int FontSprite::getFontRow(char c) {
 	switch (c) {
 		case 'A':
 		case 'B':
@@ -60,7 +77,7 @@ static int getFontRow(char c) {
 	}
 }
 
-static int getFontColumn(char c) {
+int FontSprite::getFontColumn(char c) {
 	switch(c) {
 		case 'A':
 		case 'a':

@@ -20,6 +20,7 @@ public:
     const static int PLAYER_START_X = 14;
     const static int PLAYER_START_Y = 16;
 	const static int BISCUIT_SCORE = 50;
+	const static int FONT_SIZE = 100;
     const static int GRID_TYPE[];
 };
 

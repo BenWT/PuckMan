@@ -7,12 +7,12 @@
 #include <iostream>
 #include <chrono>
 #include "SDL.h"
-#include "headers/Fonts.h"
 #include "headers/GameState.h"
 #include "headers/Tile.h"
 #include "headers/Vector2.h"
 #include "headers/Sprite.h"
 #include "headers/Player.h"
+#include "headers/FontSprite.h"
 
 using namespace std;
 using namespace chrono;
