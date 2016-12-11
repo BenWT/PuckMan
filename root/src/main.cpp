@@ -7,6 +7,7 @@
 #include <iostream>
 #include <chrono>
 #include "SDL.h"
+#include "headers/Fonts.h"
 #include "headers/GameState.h"
 #include "headers/Tile.h"
 #include "headers/Vector2.h"
@@ -57,6 +58,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	InitialiseSprites();
+
+	cout << getFontColumn('b') << endl;
 
 	// Game Loop
 	bool running = true;
