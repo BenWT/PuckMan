@@ -10,7 +10,7 @@ void FontSprite::Render(SDL_Renderer* renderer) {
 		srcRect.x = getFontColumn(c) * Globals::FONT_SIZE;
 		srcRect.y = getFontRow(c) * Globals::FONT_SIZE;
 
-	    SDL_RenderCopy(renderer, texture, &src, &destRect);
+	    SDL_RenderCopy(renderer, texture, &srcRect, &destRect);
 		destRect.x += destRect.w;
 	}
 }

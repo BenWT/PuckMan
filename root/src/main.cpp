@@ -59,8 +59,6 @@ int main(int argc, char *argv[]) {
 
 	InitialiseSprites();
 
-	cout << getFontColumn('b') << endl;
-
 	// Game Loop
 	bool running = true;
 	high_resolution_clock::time_point frameTime = NowTime();

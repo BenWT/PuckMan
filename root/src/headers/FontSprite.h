@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Sprite.h"
 #include <string>
 
 class FontSprite : public Sprite {
@@ -13,4 +14,4 @@ public:
 	void Render(SDL_Renderer*);
 	int getFontRow(char);
 	int getFontColumn(char);
-}
+};
