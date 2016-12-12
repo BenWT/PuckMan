@@ -5,6 +5,25 @@
 #include "FontSprite.h"
 #include "Globals.h"
 
+void FontSprite::DoClick() {
+	this->clicked = false;
+	// TODO Sound queue here
+}
+
+bool FontSprite::CheckBounds(int x, int y) {
+	if (x >= destRect.x) {
+		if (x <= destRect.x + destRect.w) {
+			if (y >= destRect.y) {
+				if (y <= destRect.y + destRect.h) {
+					return false;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
 void FontSprite::Render(SDL_Renderer* renderer) {
 	SDL_Rect drawRect = { destRect.x, destRect.y, fontSize, fontSize };
 

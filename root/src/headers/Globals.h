@@ -23,16 +23,6 @@ public:
 	const static int BISCUIT_SCORE = 50;
 	const static int FONT_SIZE = 100;
     const static int GRID_TYPE[];
-};
 
-/*
-static int TILE_ROWS;
-static int TILE_COUNT;
-static int TILE_SIZE;
-static int SCORE_REGION;
-static int SCREEN_WIDTH;
-static int SCREEN_HEIGHT;
-static int PLAYER_START_X;
-static int PLAYER_START_Y;
-static int GRID_TYPE[];
-*/
+	const static int MAIN_MENU_ITEMS = 3;
+};

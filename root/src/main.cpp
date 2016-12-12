@@ -6,8 +6,6 @@
 
 #include <iostream>
 #include <chrono>
-#include <vector>
-#include <iterator>
 #include "SDL.h"
 #include "headers/GameState.h"
 #include "headers/Tile.h"
@@ -22,7 +20,7 @@ using namespace chrono;
 // Methods
 void InitialiseSprites();
 void ProcessInput(bool&);
-void Update(double&);
+void Update(double&, bool&);
 void Render();
 SDL_Rect NewRect(int x, int y, int w, int h) {
 	SDL_Rect r = { x, y, w, h }; return r;
@@ -70,7 +68,7 @@ int main(int argc, char *argv[]) {
 		frameTime = NowTime();
 
 		ProcessInput(running);
-		Update(deltaTime);
+		Update(deltaTime, running);
 		Render();
 	}
 
@@ -133,11 +131,25 @@ void ProcessInput(bool &running) {
 			case SDL_MOUSEMOTION:
 				gameState.mouseX = event.motion.x;
 				gameState.mouseY = event.motion.y;
+
+				if (gameState.GetState() == MainMenu) {
+					for (int i = 0; i < Globals::MAIN_MENU_ITEMS; i++) {
+						if (gameState.mainMenuText[i].canSelect) {
+							gameState.mainMenuText[i].selected = gameState.mainMenuText[i].CheckBounds(gameState.mouseX, gameState.mouseY);
+						}
+					}
+				}
 				break;
 
 			case SDL_MOUSEBUTTONDOWN:
 				if (event.button.button == SDL_BUTTON_LEFT) {
-					cout << "Left Click" << endl;
+					for (int i = 0; i < Globals::MAIN_MENU_ITEMS; i++) {
+						if (gameState.mainMenuText[i].canClick) {
+							if (gameState.mainMenuText[i].CheckBounds(gameState.mouseX, gameState.mouseY)) {
+								gameState.mainMenuText[i].clicked = true;
+							}
+						}
+					}
 				}
 				break;
 
@@ -217,12 +229,34 @@ void ProcessInput(bool &running) {
 	}
 }
 
-void Update(double &deltaTime) {
+void Update(double &deltaTime, bool &running) {
+	if (gameState.GetState() == MainMenu) {
+		// TODO Find a better way to do this...
+		if (gameState.mainMenuText[0].clicked) { // One Player Button
+			gameState.mainMenuText[0].DoClick();
+			gameState.SetState(OnePlayer);
+		}
+		else if (gameState.mainMenuText[1].clicked) { // Two Player Button
+			gameState.mainMenuText[1].DoClick();
+			gameState.SetState(TwoPlayer);
+		}
+		else if (gameState.mainMenuText[2].clicked) { // Options Button
+			gameState.mainMenuText[2].DoClick();
+		}
+		else if (gameState.mainMenuText[3].clicked) { // Quit Button
+			gameState.mainMenuText[3].DoClick();
+			running = false;
+		}
+	}
+	// TODO Uncomment player score when text is loading
 	if (gameState.GetState() == OnePlayer) {
 		gameState.playerSprite.DoMove(gameState, deltaTime * Globals::PLAYER_SPEED);
+		// gameState.playerScoreText.text = "Score: " + gameState.playerSprite.score;
 	} else if (gameState.GetState() == TwoPlayer) {
 		gameState.playerSprite.DoMove(gameState, deltaTime * Globals::PLAYER_SPEED);
 		gameState.playerTwoSprite.DoMove(gameState, deltaTime * Globals::PLAYER_SPEED);
+		// gameState.playerScoreText.text = "Score: " + gameState.playerSprite.score;
+		// gameState.playerTwoScoreText.text = "Score: " + gameState.playerTwoSprite.score;
 	}
 }
 
@@ -230,10 +264,8 @@ void Render() {
 	SDL_RenderClear(renderer); // Clear Previous Render
 
 	if (gameState.GetState() == MainMenu) {
-		vector<FontSprite>::iterator fs;
-
-		for (fs = gameState.mainMenuText.begin(); fs < gameState.mainMenuText.end(); fs++) {
-			fs->Render(renderer);
+		for (int i = 0; i < Globals::MAIN_MENU_ITEMS; i++) {
+			gameState.mainMenuText[i].Render(renderer);
 		}
 	} else if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
 

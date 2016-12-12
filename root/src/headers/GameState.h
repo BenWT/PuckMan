@@ -5,7 +5,6 @@
 #pragma once
 
 #include <array>
-#include <vector>
 #include "Globals.h"
 #include "Sprite.h"
 #include "Player.h"
@@ -17,7 +16,9 @@ public:
 	Player playerSprite;
 	Player playerTwoSprite;
 	std::array<Tile, Globals::TILE_COUNT> tileGrid;
-	std::vector<FontSprite> mainMenuText;
+	std::array<FontSprite, Globals::MAIN_MENU_ITEMS> mainMenuText;
+	FontSprite playerScoreText;
+	FontSprite playerTwoScoreText;
 	SDL_Texture* biscuitTexture;
 
 	int mouseX = 0;
