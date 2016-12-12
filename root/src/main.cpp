@@ -125,13 +125,28 @@ void ProcessInput(bool &running) {
 				break;
 
 			case SDL_MOUSEBUTTONDOWN:
-				if(event.button.button == SDL_BUTTON_LEFT) {
-					
+				if (event.button.button == SDL_BUTTON_LEFT) {
+					cout << "Left Click" << endl;
 				}
 				break;
 
 			case SDL_KEYDOWN:
-				if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
+				if (gameState.GetState() == OnePlayer) {
+					if (key == SDLK_w || key == SDLK_UP) {
+						if (gameState.playerSprite.CanMove(gameState, Up)) gameState.playerSprite.moveDirection = Up;
+					}
+					if (key == SDLK_s || key == SDLK_DOWN) {
+						if (gameState.playerSprite.CanMove(gameState, Down)) gameState.playerSprite.moveDirection = Down;
+					}
+					if (key == SDLK_a || key == SDLK_LEFT) {
+						if (gameState.playerSprite.CanMove(gameState, Left)) gameState.playerSprite.moveDirection = Left;
+					}
+					if (key == SDLK_d || key == SDLK_RIGHT) {
+						if (gameState.playerSprite.CanMove(gameState, Right)) gameState.playerSprite.moveDirection = Right;
+					}
+				}
+
+				if (gameState.GetState() == TwoPlayer) {
 					if (key == SDLK_w) {
 						if (gameState.playerSprite.CanMove(gameState, Up)) gameState.playerSprite.moveDirection = Up;
 					}
@@ -144,9 +159,6 @@ void ProcessInput(bool &running) {
 					if (key == SDLK_d) {
 						if (gameState.playerSprite.CanMove(gameState, Right)) gameState.playerSprite.moveDirection = Right;
 					}
-				}
-
-				if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
 					if (key == SDLK_UP) {
 						if (gameState.playerTwoSprite.CanMove(gameState, Up)) gameState.playerTwoSprite.moveDirection = Up;
 					}
