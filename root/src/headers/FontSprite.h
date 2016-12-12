@@ -11,6 +11,7 @@ class FontSprite : public Sprite {
 public:
 	bool selected = false;
 	std::string text = "";
+	int fontSize;
 	SDL_Texture* selectedTexture;
 
 	void Render(SDL_Renderer*);

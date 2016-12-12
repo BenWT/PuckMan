@@ -6,18 +6,16 @@
 #include "Globals.h"
 
 void FontSprite::Render(SDL_Renderer* renderer) {
-	int origin = destRect.x;
+	SDL_Rect drawRect = { destRect.x, destRect.y, fontSize, fontSize };
 
 	for(char& c : text) {
 		srcRect.x = getFontColumn(c) * Globals::FONT_SIZE;
 		srcRect.y = getFontRow(c) * Globals::FONT_SIZE;
 
-		SDL_RenderCopy(renderer, selected ? selectedTexture : texture, &srcRect, &destRect);
+		SDL_RenderCopy(renderer, selected ? selectedTexture : texture, &srcRect, &drawRect);
 
-		destRect.x += destRect.w;
+		drawRect.x += fontSize;
 	}
-
-	destRect.x = origin;
 }
 
 int FontSprite::getFontRow(char c) {
@@ -78,6 +76,10 @@ int FontSprite::getFontRow(char c) {
 		case 'y':
 		case 'z':
 			return 1;
+			break;
+
+		default:
+			return 2;
 			break;
 	}
 }
@@ -211,6 +213,7 @@ int FontSprite::getFontColumn(char c) {
 
 		case 'Z':
 		case 'z':
+		default:
 			return 25;
 			break;
 

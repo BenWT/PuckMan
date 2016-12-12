@@ -6,6 +6,8 @@
 
 #include <iostream>
 #include <chrono>
+#include <vector>
+#include <iterator>
 #include "SDL.h"
 #include "headers/GameState.h"
 #include "headers/Tile.h"
@@ -80,11 +82,15 @@ void InitialiseSprites() {
 	SDL_Surface* playerSurface = SDL_LoadBMP("assets/character.bmp");
 	SDL_Surface* tileSurface = SDL_LoadBMP("assets/tiles.bmp");
 	SDL_Surface* biscuitSurface = SDL_LoadBMP("assets/biscuit.bmp");
+	// SDL_Surface* fontSurface = SDL_LoadBMP("assets/fonts.bmp");
+	// SDL_Surface* fontSelectedSurface = SDL_LoadBMP("assets/fonts-selected.bmp");
 
 	// Textures
 	SDL_Texture* playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
 	SDL_Texture* tileTexture = SDL_CreateTextureFromSurface(renderer, tileSurface);
 	gameState.biscuitTexture = SDL_CreateTextureFromSurface(renderer, biscuitSurface);
+	// SDL_Texture* fontTexture = SDL_CreateTextureFromSurface(renderer, fontSurface);
+	// SDL_Texture* fontSelectedSurface = SDL_CreateTextureFromSurface(renderer, fontSelectedSurface);
 
 	// Tile Textures
 	for (int i = 0; i < Globals::TILE_COUNT; i++) {
@@ -98,18 +104,23 @@ void InitialiseSprites() {
 		delete s;
 	}
 
-	// Player Textures
+	// Main Menu
+	// TODO Create Main Menu objects.
+
+	// Player One Textures
 	Player *p1 = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE));
-	Player *p2 = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE));
 	p1->tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
-	p2->tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
 	p1->SetPositionFromTile(gameState);
-	p2->SetPositionFromTile(gameState);
 	p1->moveDirection = Left;
-	p2->moveDirection = Right;
 	gameState.playerSprite = *p1;
-	gameState.playerTwoSprite = *p2;
 	delete p1;
+
+	// Player Two Texture
+	Player *p2 = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE));
+	p2->tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
+	p2->SetPositionFromTile(gameState);
+	p2->moveDirection = Right;
+	gameState.playerTwoSprite = *p2;
 	delete p2;
 }
 
@@ -131,44 +142,60 @@ void ProcessInput(bool &running) {
 				break;
 
 			case SDL_KEYDOWN:
-				if (gameState.GetState() == OnePlayer) {
-					if (key == SDLK_w || key == SDLK_UP) {
+				if (key == SDLK_w) {
+					if (gameState.GetState() == MainMenu) {
+						// Menu Move
+					} else if (gameState.GetState() == OnePlayer) {
 						if (gameState.playerSprite.CanMove(gameState, Up)) gameState.playerSprite.moveDirection = Up;
 					}
-					if (key == SDLK_s || key == SDLK_DOWN) {
+				}
+				if (key == SDLK_s) {
+					if (gameState.GetState() == MainMenu) {
+						// Menu Move
+					} else if (gameState.GetState() == OnePlayer) {
 						if (gameState.playerSprite.CanMove(gameState, Down)) gameState.playerSprite.moveDirection = Down;
 					}
-					if (key == SDLK_a || key == SDLK_LEFT) {
+				}
+				if (key == SDLK_a) {
+					if (gameState.GetState() == MainMenu) {
+						// Menu Move
+					} else if (gameState.GetState() == OnePlayer) {
 						if (gameState.playerSprite.CanMove(gameState, Left)) gameState.playerSprite.moveDirection = Left;
 					}
-					if (key == SDLK_d || key == SDLK_RIGHT) {
+				}
+				if (key == SDLK_d) {
+					if (gameState.GetState() == MainMenu) {
+						// Menu Move
+					} else if (gameState.GetState() == OnePlayer) {
 						if (gameState.playerSprite.CanMove(gameState, Right)) gameState.playerSprite.moveDirection = Right;
 					}
 				}
 
-				if (gameState.GetState() == TwoPlayer) {
-					if (key == SDLK_w) {
+				if (key == SDLK_UP) {
+					if (gameState.GetState() == OnePlayer) {
 						if (gameState.playerSprite.CanMove(gameState, Up)) gameState.playerSprite.moveDirection = Up;
-					}
-					if (key == SDLK_s) {
-						if (gameState.playerSprite.CanMove(gameState, Down)) gameState.playerSprite.moveDirection = Down;
-					}
-					if (key == SDLK_a) {
-						if (gameState.playerSprite.CanMove(gameState, Left)) gameState.playerSprite.moveDirection = Left;
-					}
-					if (key == SDLK_d) {
-						if (gameState.playerSprite.CanMove(gameState, Right)) gameState.playerSprite.moveDirection = Right;
-					}
-					if (key == SDLK_UP) {
+					} else if (gameState.GetState() == TwoPlayer) {
 						if (gameState.playerTwoSprite.CanMove(gameState, Up)) gameState.playerTwoSprite.moveDirection = Up;
 					}
-					if (key == SDLK_DOWN) {
+				}
+				if (key == SDLK_DOWN) {
+					if (gameState.GetState() == OnePlayer) {
+						if (gameState.playerSprite.CanMove(gameState, Down)) gameState.playerSprite.moveDirection = Down;
+					} else if (gameState.GetState() == TwoPlayer) {
 						if (gameState.playerTwoSprite.CanMove(gameState, Down)) gameState.playerTwoSprite.moveDirection = Down;
 					}
-					if (key == SDLK_LEFT) {
+				}
+				if (key == SDLK_LEFT) {
+					if (gameState.GetState() == OnePlayer) {
+						if (gameState.playerSprite.CanMove(gameState, Left)) gameState.playerSprite.moveDirection = Left;
+					} else if (gameState.GetState() == TwoPlayer) {
 						if (gameState.playerTwoSprite.CanMove(gameState, Left)) gameState.playerTwoSprite.moveDirection = Left;
 					}
-					if (key == SDLK_RIGHT) {
+				}
+				if (key == SDLK_RIGHT) {
+					if (gameState.GetState() == OnePlayer) {
+						if (gameState.playerSprite.CanMove(gameState, Right)) gameState.playerSprite.moveDirection = Right;
+					} else if (gameState.GetState() == TwoPlayer) {
 						if (gameState.playerTwoSprite.CanMove(gameState, Right)) gameState.playerTwoSprite.moveDirection = Right;
 					}
 				}
@@ -191,14 +218,24 @@ void ProcessInput(bool &running) {
 }
 
 void Update(double &deltaTime) {
-	if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) gameState.playerSprite.DoMove(gameState, deltaTime * 250);
-	if (gameState.GetState() == TwoPlayer) gameState.playerTwoSprite.DoMove(gameState, deltaTime * 250);
+	if (gameState.GetState() == OnePlayer) {
+		gameState.playerSprite.DoMove(gameState, deltaTime * Globals::PLAYER_SPEED);
+	} else if (gameState.GetState() == TwoPlayer) {
+		gameState.playerSprite.DoMove(gameState, deltaTime * Globals::PLAYER_SPEED);
+		gameState.playerTwoSprite.DoMove(gameState, deltaTime * Globals::PLAYER_SPEED);
+	}
 }
 
 void Render() {
 	SDL_RenderClear(renderer); // Clear Previous Render
 
-	if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
+	if (gameState.GetState() == MainMenu) {
+		vector<FontSprite>::iterator fs;
+
+		for (fs = gameState.mainMenuText.begin(); fs < gameState.mainMenuText.end(); fs++) {
+			fs->Render(renderer);
+		}
+	} else if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
 
 		// Tile Sprites
 		for (int i = 0; i < Globals::TILE_COUNT; i++) {
