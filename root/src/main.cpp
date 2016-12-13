@@ -211,8 +211,14 @@ void ProcessInput(bool &running) {
 						case 0: gameState.leftJoystickX = event.jaxis.value; break;
 						case 1: gameState.leftJoystickY = event.jaxis.value; break;
 						case 2: break; // Triggers
-						case 3: gameState.rightJoystickY = event.jaxis.value; break;
-						case 4: gameState.rightJoystickX = event.jaxis.value; break;
+
+						#ifdef _WIN32 // Windows reverses X and Y axis of right joystick
+							case 3: gameState.rightJoystickY = event.jaxis.value; break;
+							case 4: gameState.rightJoystickX = event.jaxis.value; break;
+						#else
+							case 3: gameState.rightJoystickX = event.jaxis.value; break;
+							case 4: gameState.rightJoystickY = event.jaxis.value; break;
+						#endif
 					}
 				}
 				break;
