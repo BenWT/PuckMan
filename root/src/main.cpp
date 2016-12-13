@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <cmath>
 #include "SDL.h"
 #include "SDL_image.h"
 #include "headers/GameState.h"
@@ -36,17 +37,19 @@ double TimeSinceLastFrame(high_resolution_clock::time_point frameTime) {
 // Global Variables
 SDL_Window* window;
 SDL_Renderer* renderer;
+SDL_GameController* controller;
+SDL_Joystick* joystick;
 GameState gameState;
 
 int main(int argc, char *argv[]) {
-	// Initialise SDL and log failure
+	// Initialise SDL
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
 		SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL failed to initialise. \n");
 		return 1;
 	}
 	SDL_Log("SDL initialised successfully. \n");
 
-	// Initialise SDL_image and log failure
+	// Initialise SDL_image
 	int imgFlags = IMG_INIT_PNG;
 	if( !( IMG_Init( imgFlags ) & imgFlags ) ) {
 		SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL_image failed to initialise. \n");
@@ -54,15 +57,28 @@ int main(int argc, char *argv[]) {
 	}
 	SDL_Log("SDL_image initialised successfully. \n");
 
+	// Create Window
 	SDL_CreateWindowAndRenderer(Globals::ACTUAL_SCREEN_WIDTH, Globals::ACTUAL_SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE, &window, &renderer);
-
-	// Log window failure
 	if (window == NULL || renderer == NULL) {
 		SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL failed to create a window. \n");
 		return 1;
 	}
 	SDL_RenderSetLogicalSize(renderer, Globals::SCREEN_WIDTH, Globals::SCREEN_HEIGHT);
 
+	// Create Gamepad
+	for (int i = 0; i < SDL_NumJoysticks(); i++) {
+		if (SDL_IsGameController(i)) {
+			controller = SDL_GameControllerOpen(i);
+		   	if (controller) {
+				SDL_Log("Successfully opened game controller. \n");
+				break;
+		   } else {
+			   SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL failed to open game controller. \n");
+		   }
+		}
+	}
+
+	// Create Sprites
 	InitialiseSprites();
 
 	// Game Loop
@@ -79,6 +95,16 @@ int main(int argc, char *argv[]) {
 		Render();
 	}
 
+	// Clean up on close
+	SDL_GameControllerClose(controller);
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
+    controller = NULL;
+	renderer = NULL;
+	window = NULL;
+	IMG_Quit();
+	SDL_Quit();
+
 	return 0;
 }
 
@@ -94,8 +120,8 @@ void InitialiseSprites() {
 	SDL_Texture* playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
 	SDL_Texture* tileTexture = SDL_CreateTextureFromSurface(renderer, tileSurface);
 	gameState.biscuitTexture = SDL_CreateTextureFromSurface(renderer, biscuitSurface);
-	SDL_Texture* fontTexture = SDL_CreateTextureFromSurface(renderer, fontSurface);
-	SDL_Texture* fontSelectedTexture = SDL_CreateTextureFromSurface(renderer, fontSelectedSurface);
+	SDL_Texture* font = SDL_CreateTextureFromSurface(renderer, fontSurface);
+	SDL_Texture* fontS = SDL_CreateTextureFromSurface(renderer, fontSelectedSurface);
 
 	// Tile Textures
 	for (int i = 0; i < Globals::TILE_COUNT; i++) {
@@ -111,18 +137,22 @@ void InitialiseSprites() {
 
 	// Main Menu
 	int mainMenuScale = 15;
-	FontSprite* onePlayer = new FontSprite("One Player", fontTexture, fontSelectedTexture, 0, 0, mainMenuScale, true, true);
-	FontSprite* twoPlayer = new FontSprite("Two Player", fontTexture, fontSelectedTexture, 0, mainMenuScale * Globals::FONT_HEIGHT * 1, mainMenuScale, true, true);
-	FontSprite* options = new FontSprite("Options", fontTexture, fontSelectedTexture, 0, mainMenuScale * Globals::FONT_HEIGHT * 2, mainMenuScale, true, true);
-	FontSprite* quit = new FontSprite("Quit", fontTexture, fontSelectedTexture, 0, mainMenuScale * Globals::FONT_HEIGHT * 3, mainMenuScale, true, true);
+	FontSprite* title = new FontSprite("PuckMan!", font, fontS, 0, 0, mainMenuScale * 2, false, false);
+	FontSprite* onePlayer = new FontSprite("One Player", font, fontS, 0, mainMenuScale * Globals::FONT_HEIGHT * 2, mainMenuScale, true, true);
+	FontSprite* twoPlayer = new FontSprite("Two Player", font, fontS, 0, mainMenuScale * Globals::FONT_HEIGHT * 3, mainMenuScale, true, true);
+	FontSprite* options = new FontSprite("Options", font, fontS, 0, mainMenuScale * Globals::FONT_HEIGHT * 4, mainMenuScale, true, true);
+	FontSprite* quit = new FontSprite("Quit", font, fontS, 0, mainMenuScale * Globals::FONT_HEIGHT * 5, mainMenuScale, true, true);
+	title->CentreHorizontal();
 	onePlayer->CentreHorizontal();
 	twoPlayer->CentreHorizontal();
 	options->CentreHorizontal();
 	quit->CentreHorizontal();
-	gameState.mainMenuText[0] = *onePlayer;
-	gameState.mainMenuText[1] = *twoPlayer;
-	gameState.mainMenuText[2] = *options;
-	gameState.mainMenuText[3] = *quit;
+	gameState.mainMenuText[0] = *title;
+	gameState.mainMenuText[1] = *onePlayer;
+	gameState.mainMenuText[2] = *twoPlayer;
+	gameState.mainMenuText[3] = *options;
+	gameState.mainMenuText[4] = *quit;
+	delete title;
 	delete onePlayer;
 	delete twoPlayer;
 	delete options;
@@ -146,6 +176,7 @@ void InitialiseSprites() {
 }
 
 void ProcessInput(bool &running) {
+	// Event system
 	SDL_Event event;
     while (SDL_PollEvent(&event)) {
 		SDL_Keycode key = event.key.keysym.sym;
@@ -250,34 +281,89 @@ void ProcessInput(bool &running) {
 				break;
 		}
 	}
+
+	// Controller Input
+	if (controller != NULL) {
+		// Capture Input
+		gameState.leftJoystickX = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX);
+		gameState.leftJoystickY = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTY);
+		gameState.rightJoystickX = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_RIGHTX);
+		gameState.rightJoystickY = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_RIGHTY);
+		/* bool up = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_BUTTON_DPAD_UP);
+		bool down = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN);
+		bool left = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT);
+		bool right = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT);
+		bool a = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_BUTTON_A);
+		bool b = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_BUTTON_B);
+		bool x = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_BUTTON_X);
+		bool y = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_BUTTON_Y); */
+
+		// Player One
+		if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
+			if (abs(gameState.leftJoystickX) > abs(gameState.leftJoystickY)) {
+				if (gameState.leftJoystickX < -Globals::JOYSTICK_DEAD_ZONE) { // left
+					if (gameState.playerSprite.CanMove(gameState, Left)) gameState.playerSprite.moveDirection = Left;
+				} else if (gameState.leftJoystickX > Globals::JOYSTICK_DEAD_ZONE) { // right
+					if (gameState.playerSprite.CanMove(gameState, Right)) gameState.playerSprite.moveDirection = Right;
+				}
+			} else {
+				if (gameState.leftJoystickY < -Globals::JOYSTICK_DEAD_ZONE) { // up
+					if (gameState.playerSprite.CanMove(gameState, Up)) gameState.playerSprite.moveDirection = Up;
+				} else if (gameState.leftJoystickY > Globals::JOYSTICK_DEAD_ZONE) { // down
+					if (gameState.playerSprite.CanMove(gameState, Down)) gameState.playerSprite.moveDirection = Down;
+				}
+			}
+		}
+		if (gameState.GetState() == TwoPlayer) {
+			if (abs(gameState.rightJoystickX) > abs(gameState.rightJoystickY)) {
+				if (gameState.rightJoystickX < -Globals::JOYSTICK_DEAD_ZONE) { // left
+					if (gameState.playerTwoSprite.CanMove(gameState, Left)) gameState.playerTwoSprite.moveDirection = Left;
+				} else if (gameState.rightJoystickX > Globals::JOYSTICK_DEAD_ZONE) { // right
+					if (gameState.playerTwoSprite.CanMove(gameState, Right)) gameState.playerTwoSprite.moveDirection = Right;
+				}
+			} else {
+				if (gameState.rightJoystickY < -Globals::JOYSTICK_DEAD_ZONE) { // up
+					if (gameState.playerTwoSprite.CanMove(gameState, Up)) gameState.playerTwoSprite.moveDirection = Up;
+				} else if (gameState.rightJoystickY > Globals::JOYSTICK_DEAD_ZONE) { // down
+					if (gameState.playerTwoSprite.CanMove(gameState, Down)) gameState.playerTwoSprite.moveDirection = Down;
+				}
+			}
+		}
+	}
 }
 
 void Update(double &deltaTime, bool &running) {
+
 	if (gameState.GetState() == MainMenu) {
-		// TODO Find a better way to do this...
-		if (gameState.mainMenuText[0].clicked) { // One Player Button
-			gameState.mainMenuText[0].DoClick();
+		// TODO Implement a better way to do this, with std::function
+		if (gameState.mainMenuText[1].clicked) { // One Player Button
+			gameState.mainMenuText[1].DoClick();
 			gameState.SetState(OnePlayer);
 		}
-		else if (gameState.mainMenuText[1].clicked) { // Two Player Button
-			gameState.mainMenuText[1].DoClick();
+		else if (gameState.mainMenuText[2].clicked) { // Two Player Button
+			gameState.mainMenuText[2].DoClick();
 			gameState.SetState(TwoPlayer);
 		}
-		else if (gameState.mainMenuText[2].clicked) { // Options Button
-			gameState.mainMenuText[2].DoClick();
-		}
-		else if (gameState.mainMenuText[3].clicked) { // Quit Button
+		else if (gameState.mainMenuText[3].clicked) { // Options Button
 			gameState.mainMenuText[3].DoClick();
+		}
+		else if (gameState.mainMenuText[4].clicked) { // Quit Button
+			gameState.mainMenuText[4].DoClick();
 			running = false;
 		}
 	}
-	// TODO Uncomment player score when text is loading
+	// TODO Show Player Score
+	double speed = deltaTime * Globals::PLAYER_SPEED;
 	if (gameState.GetState() == OnePlayer) {
-		gameState.playerSprite.DoMove(gameState, deltaTime * Globals::PLAYER_SPEED);
+		// TODO Keyboard affected by joystick movement
+		if (controller) {
+			speed *= max(abs(gameState.leftJoystickX), abs(gameState.leftJoystickY)) / 32767.0;
+		}
+		gameState.playerSprite.DoMove(gameState, speed);
 		// gameState.playerScoreText.text = "Score: " + gameState.playerSprite.score;
 	} else if (gameState.GetState() == TwoPlayer) {
-		gameState.playerSprite.DoMove(gameState, deltaTime * Globals::PLAYER_SPEED);
-		gameState.playerTwoSprite.DoMove(gameState, deltaTime * Globals::PLAYER_SPEED);
+		gameState.playerSprite.DoMove(gameState, speed);
+		gameState.playerTwoSprite.DoMove(gameState, speed);
 		// gameState.playerScoreText.text = "Score: " + gameState.playerSprite.score;
 		// gameState.playerTwoScoreText.text = "Score: " + gameState.playerTwoSprite.score;
 	}

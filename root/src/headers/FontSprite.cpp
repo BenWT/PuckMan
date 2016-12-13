@@ -7,16 +7,6 @@
 #include "FontSprite.h"
 #include "Globals.h"
 
-/*
-std::string text = "";
-bool canSelect = true;
-bool canClick = true;
-bool selected = false;
-bool clicked = false;
-int fontSize;
-SDL_Texture* selectedTexture;
-*/
-
 FontSprite::FontSprite(std::string text, SDL_Texture* tex, SDL_Texture* texS, int x, int y, double fontScale, bool canSelect, bool canClick) {
 	SDL_Rect src = {0, 0, Globals::FONT_WIDTH, Globals::FONT_HEIGHT};
 
@@ -40,7 +30,6 @@ void FontSprite::CentreHorizontal() {
 }
 
 void FontSprite::DoClick() {
-	std::cout << "Clicked FontSprite" << std::endl;
 	this->clicked = false;
 	// TODO Sound queue here
 }
@@ -60,7 +49,9 @@ bool FontSprite::CheckBounds(int x, int y) {
 }
 
 void FontSprite::Render(SDL_Renderer* renderer) {
-	SDL_Rect drawRect = { destRect.x, destRect.y, fontScale * Globals::FONT_WIDTH, fontScale * Globals::FONT_HEIGHT };
+	SDL_Rect drawRect = { destRect.x, destRect.y, (int)(fontScale * Globals::FONT_WIDTH), (int)(fontScale * Globals::FONT_HEIGHT) };
+
+	if (selected) drawRect.x += 50;
 
 	for(char& c : text) {
 		srcRect.x = getFontColumn(c) * Globals::FONT_WIDTH;

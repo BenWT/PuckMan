@@ -23,6 +23,10 @@ public:
 
 	int mouseX = 0;
 	int mouseY = 0;
+	double leftJoystickX = 0;
+	double leftJoystickY = 0;
+	double rightJoystickX = 0;
+	double rightJoystickY = 0;
 
 	MenuState GetState();
 	void SetState(MenuState);

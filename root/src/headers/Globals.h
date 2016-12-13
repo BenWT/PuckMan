@@ -25,5 +25,7 @@ public:
     const static int FONT_HEIGHT = 13;
     const static int GRID_TYPE[];
 
-	const static int MAIN_MENU_ITEMS = 4;
+	const static int MAIN_MENU_ITEMS = 5;
+
+	const static int JOYSTICK_DEAD_ZONE = 8000;
 };
