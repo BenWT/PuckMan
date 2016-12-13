@@ -25,6 +25,7 @@ public:
 	void DoClick();
 	bool CheckBounds(int, int);
 	void Render(SDL_Renderer*);
+	void ChangeText(std::string);
 	int getFontRow(char);
 	int getFontColumn(char);
 };

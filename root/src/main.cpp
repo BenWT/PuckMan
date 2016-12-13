@@ -171,6 +171,14 @@ void InitialiseSprites() {
 	delete options;
 	delete quit;
 
+	// Score Text
+	FontSprite* playerOneScoreText = new FontSprite("Score: ", font, fontS, 80, Globals::TILE_ROWS * Globals::TILE_SIZE, 10, false, false);
+	FontSprite* playerTwoScoreText = new FontSprite("Score: ", font, fontS, (Globals::TILE_ROWS * Globals::TILE_SIZE / 2) + Globals::TILE_SIZE, Globals::TILE_ROWS * Globals::TILE_SIZE, 10, false, false);
+	gameState.playerScoreText = *playerOneScoreText;
+	gameState.playerTwoScoreText = *playerTwoScoreText;
+	delete playerOneScoreText;
+	delete playerTwoScoreText;
+
 	// Player One Textures
 	Player* p1 = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE));
 	p1->tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
@@ -217,7 +225,6 @@ void ProcessInput() {
 				break;
 
 			case SDL_JOYBUTTONDOWN:
-				// TODO Implement Gamepad buttons
 				if (event.jbutton.which == 0) {
 					if (event.jbutton.button == 0) {
 						gameState.aGamePad = true;
@@ -363,8 +370,12 @@ void Update(double &deltaTime) {
 		if (p2Right && gameState.playerTwoSprite.CanMove(gameState, Right)) gameState.playerTwoSprite.moveDirection = Right;
 
 		gameState.playerSprite.DoMove(gameState, speed);
-		if (gameState.GetState() == TwoPlayer) gameState.playerTwoSprite.DoMove(gameState, speed);
-		// gameState.playerScoreText.text = "Score: " + gameState.playerSprite.score;
+		gameState.playerScoreText.ChangeText("Score: " + to_string(gameState.playerSprite.score));
+
+		if (gameState.GetState() == TwoPlayer) {
+			gameState.playerTwoSprite.DoMove(gameState, speed);
+			gameState.playerTwoScoreText.ChangeText("Score: " + to_string(gameState.playerTwoSprite.score));
+		}
 	}
 
 	gameState.joystickTimer += deltaTime;
@@ -395,8 +406,13 @@ void Render() {
 			}
 		}
 
-		gameState.playerSprite.Render(renderer); // Player Sprite
-		if (gameState.GetState() == TwoPlayer) gameState.playerTwoSprite.Render(renderer); // Second Player Sprite
+		gameState.playerSprite.Render(renderer);
+		gameState.playerScoreText.Render(renderer);
+
+		if (gameState.GetState() == TwoPlayer) {
+			gameState.playerTwoSprite.Render(renderer);
+			gameState.playerTwoScoreText.Render(renderer);
+		}
 	}
 
 	// Finalise Render

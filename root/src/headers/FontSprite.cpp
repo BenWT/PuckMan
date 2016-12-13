@@ -78,6 +78,11 @@ void FontSprite::Render(SDL_Renderer* renderer) {
 	}
 }
 
+void FontSprite::ChangeText(std::string newText) {
+	this->text = newText;
+	this->destRect.w = (int)(text.size() * fontScale * Globals::FONT_WIDTH);
+}
+
 int FontSprite::getFontRow(char c) {
 	switch (c) {
 		case 'A':
