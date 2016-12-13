@@ -11,8 +11,8 @@
 
 void Player::Render(SDL_Renderer* renderer) {
     SDL_Rect drawRect = destRect;
-    drawRect.x += offsetX;
-    drawRect.y += offsetY;
+    drawRect.x += (int)offsetX;
+    drawRect.y += (int)offsetY;
     SDL_RenderCopy(renderer, texture, (srcRect.w == -1) ? NULL : &srcRect, &drawRect);
 }
 

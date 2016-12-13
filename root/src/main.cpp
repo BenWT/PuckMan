@@ -22,8 +22,8 @@ using namespace chrono;
 
 // Methods
 void InitialiseSprites();
-void ProcessInput(bool&);
-void Update(double&, bool&);
+void ProcessInput();
+void Update(double&);
 void Render();
 SDL_Rect NewRect(int x, int y, int w, int h) {
 	SDL_Rect r = { x, y, w, h }; return r;
@@ -40,6 +40,22 @@ SDL_Window* window;
 SDL_Renderer* renderer;
 SDL_Joystick* joystick;
 GameState gameState;
+bool running;
+
+// Menu Callback Functions
+void onePlayerCallback() {
+	gameState.SetState(OnePlayer);
+}
+void twoPlayerCallback() {
+	gameState.SetState(TwoPlayer);
+}
+void optionsCallback() {
+	cout << "clicked options" << endl;
+}
+void quitCallback() {
+	SDL_Log("Program quit.");
+	running = false;
+}
 
 int main(int argc, char *argv[]) {
 	// Initialise SDL
@@ -79,7 +95,7 @@ int main(int argc, char *argv[]) {
 	InitialiseSprites();
 
 	// Game Loop
-	bool running = true;
+	running = true;
 	high_resolution_clock::time_point frameTime = NowTime();
 	double deltaTime = 0;
 
@@ -87,8 +103,8 @@ int main(int argc, char *argv[]) {
 		deltaTime =  TimeSinceLastFrame(frameTime);
 		frameTime = NowTime();
 
-		ProcessInput(running);
-		Update(deltaTime, running);
+		ProcessInput();
+		Update(deltaTime);
 		Render();
 	}
 
@@ -135,10 +151,10 @@ void InitialiseSprites() {
 	// Main Menu
 	int mainMenuScale = 15;
 	FontSprite* title = new FontSprite("PuckMan!", font, fontS, 0, 0, mainMenuScale * 2, false, false);
-	FontSprite* onePlayer = new FontSprite("One Player", font, fontS, 0, mainMenuScale * Globals::FONT_HEIGHT * 2, mainMenuScale, true, true);
-	FontSprite* twoPlayer = new FontSprite("Two Player", font, fontS, 0, mainMenuScale * Globals::FONT_HEIGHT * 3, mainMenuScale, true, true);
-	FontSprite* options = new FontSprite("Options", font, fontS, 0, mainMenuScale * Globals::FONT_HEIGHT * 4, mainMenuScale, true, true);
-	FontSprite* quit = new FontSprite("Quit", font, fontS, 0, mainMenuScale * Globals::FONT_HEIGHT * 5, mainMenuScale, true, true);
+	FontSprite* onePlayer = new FontSprite("One Player", font, fontS, 0, mainMenuScale * Globals::FONT_HEIGHT * 2, mainMenuScale, true, true, onePlayerCallback);
+	FontSprite* twoPlayer = new FontSprite("Two Player", font, fontS, 0, mainMenuScale * Globals::FONT_HEIGHT * 3, mainMenuScale, true, true, twoPlayerCallback);
+	FontSprite* options = new FontSprite("Options", font, fontS, 0, mainMenuScale * Globals::FONT_HEIGHT * 4, mainMenuScale, true, true, optionsCallback);
+	FontSprite* quit = new FontSprite("Quit", font, fontS, 0, mainMenuScale * Globals::FONT_HEIGHT * 5, mainMenuScale, true, true, quitCallback);
 	title->CentreHorizontal();
 	onePlayer->CentreHorizontal();
 	twoPlayer->CentreHorizontal();
@@ -172,7 +188,7 @@ void InitialiseSprites() {
 	delete p2;
 }
 
-void ProcessInput(bool &running) {
+void ProcessInput() {
 	gameState.ResetInputs();
 
 	SDL_Event event;
@@ -202,10 +218,17 @@ void ProcessInput(bool &running) {
 
 			case SDL_JOYBUTTONDOWN:
 				// TODO Implement Gamepad buttons
+				if (event.jbutton.which == 0) {
+					if (event.jbutton.button == 0) {
+						gameState.aGamePad = true;
+					} else if (event.jbutton.button == 1) {
+						SDL_Log("Program quit.");
+			 		    running = false;
+					}
+				}
 				break;
 
 			case SDL_JOYAXISMOTION:
-				// TODO Implement joysticks
 				if (event.jaxis.which == 0) {
 					switch (event.jaxis.axis) {
 						case 0: gameState.leftJoystickX = event.jaxis.value; break;
@@ -245,17 +268,69 @@ void ProcessInput(bool &running) {
 				break;
 		}
 	}
-
-
 }
 
-void Update(double &deltaTime, bool &running) {
+void Update(double &deltaTime) {
 	double speed = deltaTime * Globals::PLAYER_SPEED;
+	bool selectedWithMouse = false;
 	bool p1Up = false, p1Left = false, p1Down = false, p1Right = false;
 	bool p2Up = false, p2Left = false, p2Down = false, p2Right = false;
 
 	if (gameState.GetState() == MainMenu) {
-		// TODO Implement Main menu logic
+		for (int i = 0; i < Globals::MAIN_MENU_ITEMS; i++) {
+			if (gameState.mainMenuText[i].canSelect) {
+				gameState.mainMenuText[i].selected = gameState.mainMenuText[i].CheckBounds(gameState.mouseX, gameState.mouseY);
+
+				if (gameState.mainMenuText[i].selected) {
+					gameState.mainMenuSelectionIndex = i;
+					selectedWithMouse = true;
+				}
+			}
+
+			if (gameState.mouseClicked) {
+				if (gameState.mainMenuText[i].canClick) {
+					if (gameState.mainMenuText[i].CheckBounds(gameState.mouseX, gameState.mouseY)) {
+						gameState.mainMenuText[i].DoClick();
+					}
+				}
+			}
+		}
+
+		if (!selectedWithMouse) {
+			bool moveUp = false, moveDown = false;
+
+			if (gameState.leftJoystickY > Globals::JOYSTICK_DEAD_ZONE && gameState.joystickTimer >= gameState.joystickSwapTime) {
+				moveDown = true;
+				gameState.joystickTimer = 0.0;
+			} else if (gameState.leftJoystickY < -Globals::JOYSTICK_DEAD_ZONE && gameState.joystickTimer >= gameState.joystickSwapTime) {
+				moveUp = true;
+				gameState.joystickTimer = 0.0;
+			}
+
+			if (gameState.w || gameState.up) moveUp = true;
+			else if (gameState.s || gameState.down) moveDown = true;
+
+			if (moveUp) {
+				int newIndex = gameState.mainMenuSelectionIndex - 1;
+				if (newIndex >= 0 && gameState.mainMenuText[newIndex].canSelect) gameState.mainMenuSelectionIndex--;
+			} else if (moveDown) {
+				int newIndex = gameState.mainMenuSelectionIndex + 1;
+				if (newIndex < Globals::MAIN_MENU_ITEMS && gameState.mainMenuText[newIndex].canSelect) gameState.mainMenuSelectionIndex++;
+			}
+
+			for (int i = 0; i < Globals::MAIN_MENU_ITEMS; i++) {
+				if (gameState.mainMenuText[i].canSelect) {
+					gameState.mainMenuText[i].selected = (i == gameState.mainMenuSelectionIndex);
+				}
+			}
+		}
+
+		if (gameState.enter || gameState.aGamePad) {
+			if (gameState.mainMenuText[gameState.mainMenuSelectionIndex].canClick)
+				gameState.mainMenuText[gameState.mainMenuSelectionIndex].DoClick();
+		}
+
+
 	} else if (gameState.GetState() == OnePlayer) {
 		// Player One
 		if (gameState.w || gameState.up || gameState.leftJoystickY < -Globals::JOYSTICK_DEAD_ZONE) p1Up = true;
@@ -289,47 +364,10 @@ void Update(double &deltaTime, bool &running) {
 
 		gameState.playerSprite.DoMove(gameState, speed);
 		if (gameState.GetState() == TwoPlayer) gameState.playerTwoSprite.DoMove(gameState, speed);
+		// gameState.playerScoreText.text = "Score: " + gameState.playerSprite.score;
 	}
 
-
-
-	/* if (gameState.GetState() == MainMenu) {
-		if (gameState.GetState() == MainMenu) {
-			for (int i = 0; i < Globals::MAIN_MENU_ITEMS; i++) {
-				if (gameState.mainMenuText[i].canSelect) {
-					gameState.mainMenuText[i].selected = gameState.mainMenuText[i].CheckBounds(gameState.mouseX, gameState.mouseY);
-				}
-			}
-		}
-
-		// TODO Implement a better way to do this, with std::function
-		if (gameState.mainMenuText[1].clicked) { // One Player Button
-			gameState.mainMenuText[1].DoClick();
-			gameState.SetState(OnePlayer);
-		}
-		else if (gameState.mainMenuText[2].clicked) { // Two Player Button
-			gameState.mainMenuText[2].DoClick();
-			gameState.SetState(TwoPlayer);
-		}
-		else if (gameState.mainMenuText[3].clicked) { // Options Button
-			gameState.mainMenuText[3].DoClick();
-		}
-		else if (gameState.mainMenuText[4].clicked) { // Quit Button
-			gameState.mainMenuText[4].DoClick();
-			running = false;
-		}
-	}
-	// TODO Show Player Score
-	double speed = deltaTime * Globals::PLAYER_SPEED;
-	if (gameState.GetState() == OnePlayer) {
-		gameState.playerSprite.DoMove(gameState, speed); // TODO Keyboard affected by joystick movement
-		// gameState.playerScoreText.text = "Score: " + gameState.playerSprite.score;
-	} else if (gameState.GetState() == TwoPlayer) {
-		gameState.playerSprite.DoMove(gameState, speed);
-		gameState.playerTwoSprite.DoMove(gameState, speed);
-		// gameState.playerScoreText.text = "Score: " + gameState.playerSprite.score;
-		// gameState.playerTwoScoreText.text = "Score: " + gameState.playerTwoSprite.score;
-	} */
+	gameState.joystickTimer += deltaTime;
 }
 
 void Render() {
@@ -349,8 +387,8 @@ void Render() {
 			s.Render(renderer);
 
 			if (t.CheckBiscuit()) {
-				int posX = t.GetPositionX() + 40;
-				int posY = t.GetPositionY() + 40;
+				int posX = (int)(t.GetPositionX() + 40);
+				int posY = (int)(t.GetPositionY() + 40);
 
 				SDL_Rect biscuitRect = { posX, posY, 20, 20 };
 				SDL_RenderCopy(renderer, gameState.biscuitTexture, NULL, &biscuitRect);

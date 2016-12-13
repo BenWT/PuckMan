@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <string>
+#include <functional>
 #include "FontSprite.h"
 #include "Globals.h"
 
@@ -19,7 +20,21 @@ FontSprite::FontSprite(std::string text, SDL_Texture* tex, SDL_Texture* texS, in
 	this->canSelect = canSelect;
 	this->canClick = canClick;
 	this->selected = false;
-	this->clicked = false;
+}
+
+FontSprite::FontSprite(std::string text, SDL_Texture* tex, SDL_Texture* texS, int x, int y, double fontScale, bool canSelect, bool canClick, std::function<void()> onClick) {
+	SDL_Rect src = {0, 0, Globals::FONT_WIDTH, Globals::FONT_HEIGHT};
+
+	this->text = text;
+	this->texture = tex;
+	this->selectedTexture = texS;
+	this->destRect = { x, y, (int)(text.size() * fontScale * Globals::FONT_WIDTH), (int)(fontScale * Globals::FONT_HEIGHT)};
+	this->srcRect = src;
+	this->fontScale = fontScale;
+	this->canSelect = canSelect;
+	this->canClick = canClick;
+	this->selected = false;
+	this->onClick = onClick;
 }
 
 void FontSprite::CentreHorizontal() {
@@ -30,8 +45,8 @@ void FontSprite::CentreHorizontal() {
 }
 
 void FontSprite::DoClick() {
-	this->clicked = false;
 	// TODO Sound queue here
+	if (onClick != NULL) onClick();
 }
 
 bool FontSprite::CheckBounds(int x, int y) {
@@ -59,7 +74,7 @@ void FontSprite::Render(SDL_Renderer* renderer) {
 
 		SDL_RenderCopy(renderer, selected ? selectedTexture : texture, &srcRect, &drawRect);
 
-		drawRect.x += (fontScale * Globals::FONT_WIDTH);
+		drawRect.x += (int)(fontScale * Globals::FONT_WIDTH);
 	}
 }
 

@@ -4,8 +4,9 @@
 
 #pragma once
 
-#include "Sprite.h"
 #include <string>
+#include <functional>
+#include "Sprite.h"
 
 class FontSprite : public Sprite {
 public:
@@ -13,12 +14,13 @@ public:
 	bool canSelect = true;
 	bool canClick = true;
 	bool selected = false;
-	bool clicked = false;
 	double fontScale;
 	SDL_Texture* selectedTexture;
+	std::function<void()> onClick;
 
 	FontSprite() {}
 	FontSprite(std::string, SDL_Texture*, SDL_Texture*, int, int, double, bool, bool);
+	FontSprite(std::string, SDL_Texture*, SDL_Texture*, int, int, double, bool, bool, std::function<void()>);
 	void CentreHorizontal();
 	void DoClick();
 	bool CheckBounds(int, int);

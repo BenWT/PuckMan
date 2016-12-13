@@ -25,14 +25,14 @@ public:
 	bool mouseClicked = false;
 	int mouseX = 0;
 	int mouseY = 0;
-	
+
 	// Gamepad
 	double leftJoystickX = 0;
 	double leftJoystickY = 0;
 	double rightJoystickX = 0;
 	double rightJoystickY = 0;
 	bool aGamePad = false;
-	
+
 	// Keyboard
 	bool w = false;
 	bool a = false;
@@ -43,6 +43,11 @@ public:
 	bool down = false;
 	bool right = false;
 	bool enter = false;
+
+	// Menu
+	int mainMenuSelectionIndex = 1;
+	double joystickSwapTime = 0.25;
+	double joystickTimer = 0.0;
 
 	void ResetInputs();
 	MenuState GetState();
