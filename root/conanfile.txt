@@ -1,8 +1,10 @@
 [requires]
-SDL2/2.0.4@lasote/stable
+SDL2/2.0.5@lasote/stable
+SDL2_image/2.0.1@lasote/stable
 
 [options]
-SDL2:shared=True
+SDL2:shared=False
+SDL2_image:shared=False
 
 [generators]
 cmake

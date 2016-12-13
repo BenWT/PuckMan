@@ -7,6 +7,7 @@
 #include <iostream>
 #include <chrono>
 #include "SDL.h"
+#include "SDL_image.h"
 #include "headers/GameState.h"
 #include "headers/Tile.h"
 #include "headers/Vector2.h"
@@ -42,9 +43,16 @@ int main(int argc, char *argv[]) {
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
 		SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL failed to initialise. \n");
 		return 1;
-	} else {
-		SDL_Log("SDL initialised successfully. \n");
 	}
+	SDL_Log("SDL initialised successfully. \n");
+
+	// Initialise SDL_image and log failure
+	int imgFlags = IMG_INIT_PNG;
+	if( !( IMG_Init( imgFlags ) & imgFlags ) ) {
+		SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL_image failed to initialise. \n");
+		return 1;
+	}
+	SDL_Log("SDL_image initialised successfully. \n");
 
 	SDL_CreateWindowAndRenderer(Globals::ACTUAL_SCREEN_WIDTH, Globals::ACTUAL_SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE, &window, &renderer);
 
@@ -52,9 +60,8 @@ int main(int argc, char *argv[]) {
 	if (window == NULL || renderer == NULL) {
 		SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL failed to create a window. \n");
 		return 1;
-	} else {
-		SDL_RenderSetLogicalSize(renderer, Globals::SCREEN_WIDTH, Globals::SCREEN_HEIGHT);
 	}
+	SDL_RenderSetLogicalSize(renderer, Globals::SCREEN_WIDTH, Globals::SCREEN_HEIGHT);
 
 	InitialiseSprites();
 
@@ -78,22 +85,22 @@ int main(int argc, char *argv[]) {
 void InitialiseSprites() {
 	// Surfaces
 	SDL_Surface* playerSurface = SDL_LoadBMP("assets/character.bmp");
-	SDL_Surface* tileSurface = SDL_LoadBMP("assets/tiles.bmp");
+	SDL_Surface* tileSurface = IMG_Load("assets/tiles.png");
 	SDL_Surface* biscuitSurface = SDL_LoadBMP("assets/biscuit.bmp");
-	// SDL_Surface* fontSurface = SDL_LoadBMP("assets/fonts.bmp");
-	// SDL_Surface* fontSelectedSurface = SDL_LoadBMP("assets/fonts-selected.bmp");
+	SDL_Surface* fontSurface = IMG_Load("assets/fonts.png");
+	SDL_Surface* fontSelectedSurface = IMG_Load("assets/fontsSelected.png");
 
 	// Textures
 	SDL_Texture* playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
 	SDL_Texture* tileTexture = SDL_CreateTextureFromSurface(renderer, tileSurface);
 	gameState.biscuitTexture = SDL_CreateTextureFromSurface(renderer, biscuitSurface);
-	// SDL_Texture* fontTexture = SDL_CreateTextureFromSurface(renderer, fontSurface);
-	// SDL_Texture* fontSelectedSurface = SDL_CreateTextureFromSurface(renderer, fontSelectedSurface);
+	SDL_Texture* fontTexture = SDL_CreateTextureFromSurface(renderer, fontSurface);
+	SDL_Texture* fontSelectedTexture = SDL_CreateTextureFromSurface(renderer, fontSelectedSurface);
 
 	// Tile Textures
 	for (int i = 0; i < Globals::TILE_COUNT; i++) {
 		Tile t = gameState.tileGrid[i];
-		Sprite *s = new Sprite(
+		Sprite* s = new Sprite(
 			tileTexture,
 			NewRect((int)(t.GetTextureX()), (int)(t.GetTextureY()), Globals::TILE_SIZE, Globals::TILE_SIZE),
 			new Vector2((int)(t.GetPositionX()), (int)(t.GetPositionY()))
@@ -103,10 +110,26 @@ void InitialiseSprites() {
 	}
 
 	// Main Menu
-	// TODO Create Main Menu objects.
+	int mainMenuScale = 15;
+	FontSprite* onePlayer = new FontSprite("One Player", fontTexture, fontSelectedTexture, 0, 0, mainMenuScale, true, true);
+	FontSprite* twoPlayer = new FontSprite("Two Player", fontTexture, fontSelectedTexture, 0, mainMenuScale * Globals::FONT_HEIGHT * 1, mainMenuScale, true, true);
+	FontSprite* options = new FontSprite("Options", fontTexture, fontSelectedTexture, 0, mainMenuScale * Globals::FONT_HEIGHT * 2, mainMenuScale, true, true);
+	FontSprite* quit = new FontSprite("Quit", fontTexture, fontSelectedTexture, 0, mainMenuScale * Globals::FONT_HEIGHT * 3, mainMenuScale, true, true);
+	onePlayer->CentreHorizontal();
+	twoPlayer->CentreHorizontal();
+	options->CentreHorizontal();
+	quit->CentreHorizontal();
+	gameState.mainMenuText[0] = *onePlayer;
+	gameState.mainMenuText[1] = *twoPlayer;
+	gameState.mainMenuText[2] = *options;
+	gameState.mainMenuText[3] = *quit;
+	delete onePlayer;
+	delete twoPlayer;
+	delete options;
+	delete quit;
 
 	// Player One Textures
-	Player *p1 = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE));
+	Player* p1 = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE));
 	p1->tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
 	p1->SetPositionFromTile(gameState);
 	p1->moveDirection = Left;
@@ -114,7 +137,7 @@ void InitialiseSprites() {
 	delete p1;
 
 	// Player Two Texture
-	Player *p2 = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE));
+	Player* p2 = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE));
 	p2->tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
 	p2->SetPositionFromTile(gameState);
 	p2->moveDirection = Right;
@@ -157,28 +180,28 @@ void ProcessInput(bool &running) {
 				if (key == SDLK_w) {
 					if (gameState.GetState() == MainMenu) {
 						// Menu Move
-					} else if (gameState.GetState() == OnePlayer) {
+					} else if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
 						if (gameState.playerSprite.CanMove(gameState, Up)) gameState.playerSprite.moveDirection = Up;
 					}
 				}
 				if (key == SDLK_s) {
 					if (gameState.GetState() == MainMenu) {
 						// Menu Move
-					} else if (gameState.GetState() == OnePlayer) {
+					} else if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
 						if (gameState.playerSprite.CanMove(gameState, Down)) gameState.playerSprite.moveDirection = Down;
 					}
 				}
 				if (key == SDLK_a) {
 					if (gameState.GetState() == MainMenu) {
 						// Menu Move
-					} else if (gameState.GetState() == OnePlayer) {
+					} else if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
 						if (gameState.playerSprite.CanMove(gameState, Left)) gameState.playerSprite.moveDirection = Left;
 					}
 				}
 				if (key == SDLK_d) {
 					if (gameState.GetState() == MainMenu) {
 						// Menu Move
-					} else if (gameState.GetState() == OnePlayer) {
+					} else if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
 						if (gameState.playerSprite.CanMove(gameState, Right)) gameState.playerSprite.moveDirection = Right;
 					}
 				}

@@ -2,10 +2,45 @@
 // Copyright (c) 2016 by Ben Townshend. All Rights Reserved.
 //
 
+#include <iostream>
+#include <string>
 #include "FontSprite.h"
 #include "Globals.h"
 
+/*
+std::string text = "";
+bool canSelect = true;
+bool canClick = true;
+bool selected = false;
+bool clicked = false;
+int fontSize;
+SDL_Texture* selectedTexture;
+*/
+
+FontSprite::FontSprite(std::string text, SDL_Texture* tex, SDL_Texture* texS, int x, int y, double fontScale, bool canSelect, bool canClick) {
+	SDL_Rect src = {0, 0, Globals::FONT_WIDTH, Globals::FONT_HEIGHT};
+
+	this->text = text;
+	this->texture = tex;
+	this->selectedTexture = texS;
+	this->destRect = { x, y, (int)(text.size() * fontScale * Globals::FONT_WIDTH), (int)(fontScale * Globals::FONT_HEIGHT)};
+	this->srcRect = src;
+	this->fontScale = fontScale;
+	this->canSelect = canSelect;
+	this->canClick = canClick;
+	this->selected = false;
+	this->clicked = false;
+}
+
+void FontSprite::CentreHorizontal() {
+	double width = text.size() * fontScale * Globals::FONT_WIDTH;
+
+	destRect.x = (int)((Globals::SCREEN_WIDTH / 2) - (width / 2));
+	destRect.w = (int)width;
+}
+
 void FontSprite::DoClick() {
+	std::cout << "Clicked FontSprite" << std::endl;
 	this->clicked = false;
 	// TODO Sound queue here
 }
@@ -15,7 +50,7 @@ bool FontSprite::CheckBounds(int x, int y) {
 		if (x <= destRect.x + destRect.w) {
 			if (y >= destRect.y) {
 				if (y <= destRect.y + destRect.h) {
-					return false;
+					return true;
 				}
 			}
 		}
@@ -25,15 +60,15 @@ bool FontSprite::CheckBounds(int x, int y) {
 }
 
 void FontSprite::Render(SDL_Renderer* renderer) {
-	SDL_Rect drawRect = { destRect.x, destRect.y, fontSize, fontSize };
+	SDL_Rect drawRect = { destRect.x, destRect.y, fontScale * Globals::FONT_WIDTH, fontScale * Globals::FONT_HEIGHT };
 
 	for(char& c : text) {
-		srcRect.x = getFontColumn(c) * Globals::FONT_SIZE;
-		srcRect.y = getFontRow(c) * Globals::FONT_SIZE;
+		srcRect.x = getFontColumn(c) * Globals::FONT_WIDTH;
+		srcRect.y = getFontRow(c) * Globals::FONT_HEIGHT;
 
 		SDL_RenderCopy(renderer, selected ? selectedTexture : texture, &srcRect, &drawRect);
 
-		drawRect.x += fontSize;
+		drawRect.x += (fontScale * Globals::FONT_WIDTH);
 	}
 }
 
@@ -107,81 +142,97 @@ int FontSprite::getFontColumn(char c) {
 	switch(c) {
 		case 'A':
 		case 'a':
+		case '1':
 			return 0;
 			break;
 
 		case 'B':
 		case 'b':
+		case '2':
 			return 1;
 			break;
 
 		case 'C':
 		case 'c':
+		case '3':
 			return 2;
 			break;
 
 		case 'D':
 		case 'd':
+		case '4':
 			return 3;
 			break;
 
 		case 'E':
 		case 'e':
+		case '5':
 			return 4;
 			break;
 
 		case 'F':
 		case 'f':
+		case '6':
 			return 5;
 			break;
 
 		case 'G':
 		case 'g':
+		case '7':
 			return 6;
 			break;
 
 		case 'H':
 		case 'h':
+		case '8':
 			return 7;
 			break;
 
 		case 'I':
 		case 'i':
+		case '9':
 			return 8;
 			break;
 
 		case 'J':
 		case 'j':
+		case '0':
 			return 9;
 			break;
 
 		case 'K':
 		case 'k':
+		case '!':
 			return 10;
 			break;
 
 		case 'L':
 		case 'l':
+		case '?':
 			return 11;
 			break;
 
 		case 'M':
 		case 'm':
+		case ':':
 			return 12;
 			break;
 
 		case 'N':
 		case 'n':
+		case ',':
 			return 13;
 			break;
 
 		case 'O':
 		case 'o':
+		case '.':
 			return 14;
 			break;
 
 		case 'P':
 		case 'p':
+		case ' ':
 			return 15;
 			break;
 

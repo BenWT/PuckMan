@@ -1,4 +1,5 @@
 .DS_Store
+image-source/
 build/
 conaninfo.txt
 conanbuildinfo.cmake

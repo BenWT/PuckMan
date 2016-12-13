@@ -21,8 +21,9 @@ public:
     const static int PLAYER_START_Y = 16;
 	const static int PLAYER_SPEED = 250;
 	const static int BISCUIT_SCORE = 50;
-	const static int FONT_SIZE = 100;
+	const static int FONT_WIDTH = 9;
+    const static int FONT_HEIGHT = 13;
     const static int GRID_TYPE[];
 
-	const static int MAIN_MENU_ITEMS = 3;
+	const static int MAIN_MENU_ITEMS = 4;
 };
