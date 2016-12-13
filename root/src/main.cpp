@@ -8,6 +8,7 @@
 #include <chrono>
 #include <cmath>
 #include "SDL.h"
+#include "SDL_gamecontroller.h"
 #include "SDL_image.h"
 #include "headers/GameState.h"
 #include "headers/Tile.h"
@@ -37,13 +38,12 @@ double TimeSinceLastFrame(high_resolution_clock::time_point frameTime) {
 // Global Variables
 SDL_Window* window;
 SDL_Renderer* renderer;
-SDL_GameController* controller;
 SDL_Joystick* joystick;
 GameState gameState;
 
 int main(int argc, char *argv[]) {
 	// Initialise SDL
-	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) != 0) {
 		SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL failed to initialise. \n");
 		return 1;
 	}
@@ -67,14 +67,11 @@ int main(int argc, char *argv[]) {
 
 	// Create Gamepad
 	for (int i = 0; i < SDL_NumJoysticks(); i++) {
-		if (SDL_IsGameController(i)) {
-			controller = SDL_GameControllerOpen(i);
-		   	if (controller) {
-				SDL_Log("Successfully opened game controller. \n");
-				break;
-		   } else {
-			   SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL failed to open game controller. \n");
-		   }
+		joystick = SDL_JoystickOpen(i);
+	   	if (joystick) {
+			SDL_Log("Joystick initialised successfully. \n");
+		} else {
+			SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL failed to load joystick. \n");
 		}
 	}
 
@@ -96,10 +93,10 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Clean up on close
-	SDL_GameControllerClose(controller);
+	SDL_JoystickClose(joystick);
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
-    controller = NULL;
+    joystick = NULL;
 	renderer = NULL;
 	window = NULL;
 	IMG_Quit();
@@ -176,103 +173,64 @@ void InitialiseSprites() {
 }
 
 void ProcessInput(bool &running) {
-	// Event system
-	SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-		SDL_Keycode key = event.key.keysym.sym;
+	gameState.ResetInputs();
 
-		switch (event.type) {
+	SDL_Event event;
+	while (SDL_PollEvent(&event)) {
+	    switch (event.type) {
 			case SDL_MOUSEMOTION:
 				gameState.mouseX = event.motion.x;
 				gameState.mouseY = event.motion.y;
-
-				if (gameState.GetState() == MainMenu) {
-					for (int i = 0; i < Globals::MAIN_MENU_ITEMS; i++) {
-						if (gameState.mainMenuText[i].canSelect) {
-							gameState.mainMenuText[i].selected = gameState.mainMenuText[i].CheckBounds(gameState.mouseX, gameState.mouseY);
-						}
-					}
-				}
 				break;
 
 			case SDL_MOUSEBUTTONDOWN:
 				if (event.button.button == SDL_BUTTON_LEFT) {
-					for (int i = 0; i < Globals::MAIN_MENU_ITEMS; i++) {
-						if (gameState.mainMenuText[i].canClick) {
-							if (gameState.mainMenuText[i].CheckBounds(gameState.mouseX, gameState.mouseY)) {
-								gameState.mainMenuText[i].clicked = true;
-							}
-						}
+					gameState.mouseClicked = true;
+				}
+				break;
+
+			case SDL_JOYHATMOTION:
+				if (event.jhat.which == 0) {
+					switch (event.jhat.value) {
+						case SDL_HAT_UP: gameState.w = true; break;
+						case SDL_HAT_LEFT: gameState.a = true; break;
+						case SDL_HAT_DOWN: gameState.s = true; break;
+						case SDL_HAT_RIGHT: gameState.d = true; break;
+					}
+				}
+				break;
+
+			case SDL_JOYBUTTONDOWN:
+				// TODO Implement Gamepad buttons
+				break;
+
+			case SDL_JOYAXISMOTION:
+				// TODO Implement joysticks
+				if (event.jaxis.which == 0) {
+					switch (event.jaxis.axis) {
+						case 0: gameState.leftJoystickX = event.jaxis.value; break;
+						case 1: gameState.leftJoystickY = event.jaxis.value; break;
+						case 2: break; // Triggers
+						case 3: gameState.rightJoystickY = event.jaxis.value; break;
+						case 4: gameState.rightJoystickX = event.jaxis.value; break;
 					}
 				}
 				break;
 
 			case SDL_KEYDOWN:
-				if (key == SDLK_w) {
-					if (gameState.GetState() == MainMenu) {
-						// Menu Move
-					} else if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
-						if (gameState.playerSprite.CanMove(gameState, Up)) gameState.playerSprite.moveDirection = Up;
-					}
+				switch (event.key.keysym.sym) {
+					case SDLK_w: gameState.w = true; break;
+					case SDLK_a: gameState.a = true; break;
+					case SDLK_s: gameState.s = true; break;
+					case SDLK_d: gameState.d = true; break;
+					case SDLK_UP: gameState.up = true; break;
+					case SDLK_LEFT: gameState.left = true; break;
+					case SDLK_DOWN: gameState.down = true; break;
+					case SDLK_RIGHT: gameState.right = true; break;
+					case SDLK_KP_ENTER: gameState.enter = true; break;
+					case SDLK_RETURN: gameState.enter = true; break;
+					case SDLK_ESCAPE: SDL_Log("Program quit."); running = false; break;
 				}
-				if (key == SDLK_s) {
-					if (gameState.GetState() == MainMenu) {
-						// Menu Move
-					} else if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
-						if (gameState.playerSprite.CanMove(gameState, Down)) gameState.playerSprite.moveDirection = Down;
-					}
-				}
-				if (key == SDLK_a) {
-					if (gameState.GetState() == MainMenu) {
-						// Menu Move
-					} else if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
-						if (gameState.playerSprite.CanMove(gameState, Left)) gameState.playerSprite.moveDirection = Left;
-					}
-				}
-				if (key == SDLK_d) {
-					if (gameState.GetState() == MainMenu) {
-						// Menu Move
-					} else if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
-						if (gameState.playerSprite.CanMove(gameState, Right)) gameState.playerSprite.moveDirection = Right;
-					}
-				}
-
-				if (key == SDLK_UP) {
-					if (gameState.GetState() == OnePlayer) {
-						if (gameState.playerSprite.CanMove(gameState, Up)) gameState.playerSprite.moveDirection = Up;
-					} else if (gameState.GetState() == TwoPlayer) {
-						if (gameState.playerTwoSprite.CanMove(gameState, Up)) gameState.playerTwoSprite.moveDirection = Up;
-					}
-				}
-				if (key == SDLK_DOWN) {
-					if (gameState.GetState() == OnePlayer) {
-						if (gameState.playerSprite.CanMove(gameState, Down)) gameState.playerSprite.moveDirection = Down;
-					} else if (gameState.GetState() == TwoPlayer) {
-						if (gameState.playerTwoSprite.CanMove(gameState, Down)) gameState.playerTwoSprite.moveDirection = Down;
-					}
-				}
-				if (key == SDLK_LEFT) {
-					if (gameState.GetState() == OnePlayer) {
-						if (gameState.playerSprite.CanMove(gameState, Left)) gameState.playerSprite.moveDirection = Left;
-					} else if (gameState.GetState() == TwoPlayer) {
-						if (gameState.playerTwoSprite.CanMove(gameState, Left)) gameState.playerTwoSprite.moveDirection = Left;
-					}
-				}
-				if (key == SDLK_RIGHT) {
-					if (gameState.GetState() == OnePlayer) {
-						if (gameState.playerSprite.CanMove(gameState, Right)) gameState.playerSprite.moveDirection = Right;
-					} else if (gameState.GetState() == TwoPlayer) {
-						if (gameState.playerTwoSprite.CanMove(gameState, Right)) gameState.playerTwoSprite.moveDirection = Right;
-					}
-				}
-
-				if (key == SDLK_ESCAPE) {
-					SDL_Log("Program quit.");
-		 		    running = false;
-				}
-				break;
-
-			case SDL_KEYUP:
 				break;
 
 			case SDL_QUIT:
@@ -282,59 +240,62 @@ void ProcessInput(bool &running) {
 		}
 	}
 
-	// Controller Input
-	if (controller != NULL) {
-		// Capture Input
-		gameState.leftJoystickX = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTX);
-		gameState.leftJoystickY = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_LEFTY);
-		gameState.rightJoystickX = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_RIGHTX);
-		gameState.rightJoystickY = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_RIGHTY);
-		/* bool up = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_BUTTON_DPAD_UP);
-		bool down = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_BUTTON_DPAD_DOWN);
-		bool left = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_BUTTON_DPAD_LEFT);
-		bool right = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_BUTTON_DPAD_RIGHT);
-		bool a = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_BUTTON_A);
-		bool b = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_BUTTON_B);
-		bool x = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_BUTTON_X);
-		bool y = SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_BUTTON_Y); */
 
-		// Player One
-		if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
-			if (abs(gameState.leftJoystickX) > abs(gameState.leftJoystickY)) {
-				if (gameState.leftJoystickX < -Globals::JOYSTICK_DEAD_ZONE) { // left
-					if (gameState.playerSprite.CanMove(gameState, Left)) gameState.playerSprite.moveDirection = Left;
-				} else if (gameState.leftJoystickX > Globals::JOYSTICK_DEAD_ZONE) { // right
-					if (gameState.playerSprite.CanMove(gameState, Right)) gameState.playerSprite.moveDirection = Right;
-				}
-			} else {
-				if (gameState.leftJoystickY < -Globals::JOYSTICK_DEAD_ZONE) { // up
-					if (gameState.playerSprite.CanMove(gameState, Up)) gameState.playerSprite.moveDirection = Up;
-				} else if (gameState.leftJoystickY > Globals::JOYSTICK_DEAD_ZONE) { // down
-					if (gameState.playerSprite.CanMove(gameState, Down)) gameState.playerSprite.moveDirection = Down;
-				}
-			}
-		}
-		if (gameState.GetState() == TwoPlayer) {
-			if (abs(gameState.rightJoystickX) > abs(gameState.rightJoystickY)) {
-				if (gameState.rightJoystickX < -Globals::JOYSTICK_DEAD_ZONE) { // left
-					if (gameState.playerTwoSprite.CanMove(gameState, Left)) gameState.playerTwoSprite.moveDirection = Left;
-				} else if (gameState.rightJoystickX > Globals::JOYSTICK_DEAD_ZONE) { // right
-					if (gameState.playerTwoSprite.CanMove(gameState, Right)) gameState.playerTwoSprite.moveDirection = Right;
-				}
-			} else {
-				if (gameState.rightJoystickY < -Globals::JOYSTICK_DEAD_ZONE) { // up
-					if (gameState.playerTwoSprite.CanMove(gameState, Up)) gameState.playerTwoSprite.moveDirection = Up;
-				} else if (gameState.rightJoystickY > Globals::JOYSTICK_DEAD_ZONE) { // down
-					if (gameState.playerTwoSprite.CanMove(gameState, Down)) gameState.playerTwoSprite.moveDirection = Down;
-				}
-			}
-		}
-	}
 }
 
 void Update(double &deltaTime, bool &running) {
+	double speed = deltaTime * Globals::PLAYER_SPEED;
+	bool p1Up = false, p1Left = false, p1Down = false, p1Right = false;
+	bool p2Up = false, p2Left = false, p2Down = false, p2Right = false;
 
 	if (gameState.GetState() == MainMenu) {
+		// TODO Implement Main menu logic
+	} else if (gameState.GetState() == OnePlayer) {
+		// Player One
+		if (gameState.w || gameState.up || gameState.leftJoystickY < -Globals::JOYSTICK_DEAD_ZONE) p1Up = true;
+		else if (gameState.a || gameState.left || gameState.leftJoystickX < -Globals::JOYSTICK_DEAD_ZONE) p1Left = true;
+		else if (gameState.s || gameState.down || gameState.leftJoystickY > Globals::JOYSTICK_DEAD_ZONE) p1Down = true;
+		else if (gameState.d || gameState.right || gameState.leftJoystickX > Globals::JOYSTICK_DEAD_ZONE) p1Right = true;
+	} else if (gameState.GetState() == TwoPlayer) {
+		// Player One
+		if (gameState.w || gameState.leftJoystickY < -Globals::JOYSTICK_DEAD_ZONE) p1Up = true;
+		else if (gameState.a || gameState.leftJoystickX < -Globals::JOYSTICK_DEAD_ZONE) p1Left = true;
+		else if (gameState.s || gameState.leftJoystickY > Globals::JOYSTICK_DEAD_ZONE) p1Down = true;
+		else if (gameState.d || gameState.leftJoystickX > Globals::JOYSTICK_DEAD_ZONE) p1Right = true;
+
+		// Player Two
+		if (gameState.up || gameState.rightJoystickY < -Globals::JOYSTICK_DEAD_ZONE) p2Up = true;
+		else if (gameState.left || gameState.rightJoystickX < -Globals::JOYSTICK_DEAD_ZONE) p2Left = true;
+		else if (gameState.down || gameState.rightJoystickY > Globals::JOYSTICK_DEAD_ZONE) p2Down = true;
+		else if (gameState.right || gameState.rightJoystickX > Globals::JOYSTICK_DEAD_ZONE) p2Right = true;
+	}
+
+	if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
+		if (p1Up && gameState.playerSprite.CanMove(gameState, Up)) gameState.playerSprite.moveDirection = Up;
+		if (p1Left && gameState.playerSprite.CanMove(gameState, Left)) gameState.playerSprite.moveDirection = Left;
+		if (p1Down && gameState.playerSprite.CanMove(gameState, Down)) gameState.playerSprite.moveDirection = Down;
+		if (p1Right && gameState.playerSprite.CanMove(gameState, Right)) gameState.playerSprite.moveDirection = Right;
+
+		if (p2Up && gameState.playerTwoSprite.CanMove(gameState, Up)) gameState.playerTwoSprite.moveDirection = Up;
+		if (p2Left && gameState.playerTwoSprite.CanMove(gameState, Left)) gameState.playerTwoSprite.moveDirection = Left;
+		if (p2Down && gameState.playerTwoSprite.CanMove(gameState, Down)) gameState.playerTwoSprite.moveDirection = Down;
+		if (p2Right && gameState.playerTwoSprite.CanMove(gameState, Right)) gameState.playerTwoSprite.moveDirection = Right;
+
+		gameState.playerSprite.DoMove(gameState, speed);
+		if (gameState.GetState() == TwoPlayer) gameState.playerTwoSprite.DoMove(gameState, speed);
+	}
+
+
+
+	/* if (gameState.GetState() == MainMenu) {
+		if (gameState.GetState() == MainMenu) {
+			for (int i = 0; i < Globals::MAIN_MENU_ITEMS; i++) {
+				if (gameState.mainMenuText[i].canSelect) {
+					gameState.mainMenuText[i].selected = gameState.mainMenuText[i].CheckBounds(gameState.mouseX, gameState.mouseY);
+				}
+			}
+		}
+
 		// TODO Implement a better way to do this, with std::function
 		if (gameState.mainMenuText[1].clicked) { // One Player Button
 			gameState.mainMenuText[1].DoClick();
@@ -355,18 +316,14 @@ void Update(double &deltaTime, bool &running) {
 	// TODO Show Player Score
 	double speed = deltaTime * Globals::PLAYER_SPEED;
 	if (gameState.GetState() == OnePlayer) {
-		// TODO Keyboard affected by joystick movement
-		if (controller) {
-			speed *= max(abs(gameState.leftJoystickX), abs(gameState.leftJoystickY)) / 32767.0;
-		}
-		gameState.playerSprite.DoMove(gameState, speed);
+		gameState.playerSprite.DoMove(gameState, speed); // TODO Keyboard affected by joystick movement
 		// gameState.playerScoreText.text = "Score: " + gameState.playerSprite.score;
 	} else if (gameState.GetState() == TwoPlayer) {
 		gameState.playerSprite.DoMove(gameState, speed);
 		gameState.playerTwoSprite.DoMove(gameState, speed);
 		// gameState.playerScoreText.text = "Score: " + gameState.playerSprite.score;
 		// gameState.playerTwoScoreText.text = "Score: " + gameState.playerTwoSprite.score;
-	}
+	} */
 }
 
 void Render() {

@@ -11,7 +11,6 @@
 class GameState;
 class Player : public Sprite {
 public:
-	// TODO : Swap MoveDirection from GameState to Player
 	MoveDirection moveDirection;
 	int score = 0;
 	int tile;
