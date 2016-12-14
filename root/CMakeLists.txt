@@ -8,6 +8,8 @@ conan_basic_setup()
 
 add_executable(${PROJECT_NAME}
 	src/main.cpp
+	src/headers/Enemy.cpp
+	src/headers/Enemy.h
 	src/headers/FontSprite.cpp
 	src/headers/FontSprite.h
 	src/headers/GameState.cpp

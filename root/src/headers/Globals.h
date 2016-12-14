@@ -4,7 +4,7 @@
 
 #pragma once
 
-enum MenuState { MainMenu, OnePlayer, TwoPlayer };
+enum MenuState { MainMenu, OnePlayer, TwoPlayer, EndGameOnePlayer, EndGameTwoPlayer };
 enum MoveDirection { Up, Down, Left, Right };
 
 class Globals {
@@ -24,8 +24,12 @@ public:
 	const static int FONT_WIDTH = 9;
     const static int FONT_HEIGHT = 13;
     const static int GRID_TYPE[];
+    const static int ENEMY_START_X[];
+    const static int ENEMY_START_Y[];
 
 	const static int MAIN_MENU_ITEMS = 5;
+    const static int END_GAME_ONE_ITEMS = 1;
+    const static int END_GAME_TWO_ITEMS = 1;
 
 	const static int JOYSTICK_DEAD_ZONE = 8000;
 };

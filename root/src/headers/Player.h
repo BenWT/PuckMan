@@ -12,6 +12,7 @@ class GameState;
 class Player : public Sprite {
 public:
 	MoveDirection moveDirection;
+	bool alive = true;
 	int score = 0;
 	int tile;
 	double offsetX = 0;

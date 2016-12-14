@@ -15,6 +15,7 @@
 #include "headers/Vector2.h"
 #include "headers/Sprite.h"
 #include "headers/Player.h"
+#include "headers/Enemy.h"
 #include "headers/FontSprite.h"
 
 using namespace std;
@@ -124,6 +125,7 @@ int main(int argc, char *argv[]) {
 void InitialiseSprites() {
 	// Surfaces
 	SDL_Surface* playerSurface = SDL_LoadBMP("assets/character.bmp");
+	SDL_Surface* enemySurface = IMG_Load("assets/ghost.png");
 	SDL_Surface* tileSurface = IMG_Load("assets/tiles.png");
 	SDL_Surface* biscuitSurface = SDL_LoadBMP("assets/biscuit.bmp");
 	SDL_Surface* fontSurface = IMG_Load("assets/fonts.png");
@@ -131,22 +133,11 @@ void InitialiseSprites() {
 
 	// Textures
 	SDL_Texture* playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
+	SDL_Texture* enemyTexture = SDL_CreateTextureFromSurface(renderer, enemySurface);
 	SDL_Texture* tileTexture = SDL_CreateTextureFromSurface(renderer, tileSurface);
 	gameState.biscuitTexture = SDL_CreateTextureFromSurface(renderer, biscuitSurface);
 	SDL_Texture* font = SDL_CreateTextureFromSurface(renderer, fontSurface);
 	SDL_Texture* fontS = SDL_CreateTextureFromSurface(renderer, fontSelectedSurface);
-
-	// Tile Textures
-	for (int i = 0; i < Globals::TILE_COUNT; i++) {
-		Tile t = gameState.tileGrid[i];
-		Sprite* s = new Sprite(
-			tileTexture,
-			NewRect((int)(t.GetTextureX()), (int)(t.GetTextureY()), Globals::TILE_SIZE, Globals::TILE_SIZE),
-			new Vector2((int)(t.GetPositionX()), (int)(t.GetPositionY()))
-		);
-		gameState.tileGrid[i].SetSprite(*s);
-		delete s;
-	}
 
 	// Main Menu
 	int mainMenuScale = 15;
@@ -171,6 +162,18 @@ void InitialiseSprites() {
 	delete options;
 	delete quit;
 
+	// One Player Death Menu
+	FontSprite* gameOverOne = new FontSprite("Game Over!", font, fontS, 0, 0, mainMenuScale * 2, false, false);
+	gameOverOne->CentreHorizontal();
+	gameState.endGameOneText[0] = *gameOverOne;
+	delete gameOverOne;
+
+	// Two Player Death Menu
+	FontSprite* gameOverTwo = new FontSprite("Game Over!", font, fontS, 0, 0, mainMenuScale * 2, false, false);
+	gameOverTwo->CentreHorizontal();
+	gameState.endGameTwoText[0] = *gameOverTwo;
+	delete gameOverTwo;
+
 	// Score Text
 	FontSprite* playerOneScoreText = new FontSprite("Score: ", font, fontS, 80, Globals::TILE_ROWS * Globals::TILE_SIZE, 10, false, false);
 	FontSprite* playerTwoScoreText = new FontSprite("Score: ", font, fontS, (Globals::TILE_ROWS * Globals::TILE_SIZE / 2) + Globals::TILE_SIZE, Globals::TILE_ROWS * Globals::TILE_SIZE, 10, false, false);
@@ -179,8 +182,29 @@ void InitialiseSprites() {
 	delete playerOneScoreText;
 	delete playerTwoScoreText;
 
+	// Tile Textures
+	for (int i = 0; i < Globals::TILE_COUNT; i++) {
+		Tile t = gameState.tileGrid[i];
+		Sprite* s = new Sprite(
+			tileTexture,
+			NewRect((int)(t.GetTextureX()), (int)(t.GetTextureY()), Globals::TILE_SIZE, Globals::TILE_SIZE),
+			new Vector2((int)(t.GetPositionX()), (int)(t.GetPositionY()))
+		);
+		gameState.tileGrid[i].SetSprite(*s);
+		delete s;
+	}
+
+	for (int i = 0; i < 4; i++) {
+		Enemy* e = new Enemy(enemyTexture, NewRect(0, 0, -1, -1), new Vector2(0, 0));
+		e->tile = Globals::ENEMY_START_X[i] + (Globals::ENEMY_START_Y[i] * Globals::TILE_ROWS);
+		e->SetPositionFromTile(gameState);
+		e->moveDirection = Left;
+		gameState.enemySprites[i] = *e;
+		delete e;
+	}
+
 	// Player One Textures
-	Player* p1 = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE));
+	Player* p1 = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(0, 0));
 	p1->tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
 	p1->SetPositionFromTile(gameState);
 	p1->moveDirection = Left;
@@ -188,7 +212,7 @@ void InitialiseSprites() {
 	delete p1;
 
 	// Player Two Texture
-	Player* p2 = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE));
+	Player* p2 = new Player(playerTexture, NewRect(0, 0, -1, -1), new Vector2(0, 0));
 	p2->tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
 	p2->SetPositionFromTile(gameState);
 	p2->moveDirection = Right;
@@ -359,15 +383,40 @@ void Update(double &deltaTime) {
 	}
 
 	if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
-		if (p1Up && gameState.playerSprite.CanMove(gameState, Up)) gameState.playerSprite.moveDirection = Up;
-		if (p1Left && gameState.playerSprite.CanMove(gameState, Left)) gameState.playerSprite.moveDirection = Left;
-		if (p1Down && gameState.playerSprite.CanMove(gameState, Down)) gameState.playerSprite.moveDirection = Down;
-		if (p1Right && gameState.playerSprite.CanMove(gameState, Right)) gameState.playerSprite.moveDirection = Right;
+		if (gameState.playerSprite.alive) {
+			if (p1Up && gameState.playerSprite.CanMove(gameState, Up)) gameState.playerSprite.moveDirection = Up;
+			if (p1Left && gameState.playerSprite.CanMove(gameState, Left)) gameState.playerSprite.moveDirection = Left;
+			if (p1Down && gameState.playerSprite.CanMove(gameState, Down)) gameState.playerSprite.moveDirection = Down;
+			if (p1Right && gameState.playerSprite.CanMove(gameState, Right)) gameState.playerSprite.moveDirection = Right;
+		}
 
-		if (p2Up && gameState.playerTwoSprite.CanMove(gameState, Up)) gameState.playerTwoSprite.moveDirection = Up;
-		if (p2Left && gameState.playerTwoSprite.CanMove(gameState, Left)) gameState.playerTwoSprite.moveDirection = Left;
-		if (p2Down && gameState.playerTwoSprite.CanMove(gameState, Down)) gameState.playerTwoSprite.moveDirection = Down;
-		if (p2Right && gameState.playerTwoSprite.CanMove(gameState, Right)) gameState.playerTwoSprite.moveDirection = Right;
+		if (gameState.playerTwoSprite.alive) {
+			if (p2Up && gameState.playerTwoSprite.CanMove(gameState, Up)) gameState.playerTwoSprite.moveDirection = Up;
+			if (p2Left && gameState.playerTwoSprite.CanMove(gameState, Left)) gameState.playerTwoSprite.moveDirection = Left;
+			if (p2Down && gameState.playerTwoSprite.CanMove(gameState, Down)) gameState.playerTwoSprite.moveDirection = Down;
+			if (p2Right && gameState.playerTwoSprite.CanMove(gameState, Right)) gameState.playerTwoSprite.moveDirection = Right;
+		}
+
+		for (int i = 0; i < 4; i++) {
+			if (gameState.playerSprite.tile == gameState.enemySprites[i].tile) {
+				gameState.playerSprite.alive = false;
+			}
+			if (gameState.GetState() == TwoPlayer) {
+				if (gameState.playerTwoSprite.tile == gameState.enemySprites[i].tile) {
+					gameState.playerTwoSprite.alive = false;
+				}
+			}
+		}
+
+		if (gameState.GetState() == OnePlayer) {
+			if (!gameState.playerSprite.alive) {
+				gameState.SetState(EndGameOnePlayer);
+			}
+		} else if (gameState.GetState() == TwoPlayer) {
+			if (!gameState.playerSprite.alive && !gameState.playerTwoSprite.alive) {
+				gameState.SetState(EndGameTwoPlayer);
+			}
+		}
 
 		gameState.playerSprite.DoMove(gameState, speed);
 		gameState.playerScoreText.ChangeText("Score: " + to_string(gameState.playerSprite.score));
@@ -376,6 +425,10 @@ void Update(double &deltaTime) {
 			gameState.playerTwoSprite.DoMove(gameState, speed);
 			gameState.playerTwoScoreText.ChangeText("Score: " + to_string(gameState.playerTwoSprite.score));
 		}
+	} else if (gameState.GetState() == EndGameOnePlayer) {
+
+	} else if (gameState.GetState() == EndGameTwoPlayer) {
+
 	}
 
 	gameState.joystickTimer += deltaTime;
@@ -392,18 +445,19 @@ void Render() {
 
 		// Tile Sprites
 		for (int i = 0; i < Globals::TILE_COUNT; i++) {
-			Tile t = gameState.tileGrid[i];
-			Sprite s = t.GetSprite();
+			gameState.tileGrid[i].GetSprite().Render(renderer);
 
-			s.Render(renderer);
-
-			if (t.CheckBiscuit()) {
-				int posX = (int)(t.GetPositionX() + 40);
-				int posY = (int)(t.GetPositionY() + 40);
+			if (gameState.tileGrid[i].CheckBiscuit()) {
+				int posX = (int)(gameState.tileGrid[i].GetPositionX() + 40);
+				int posY = (int)(gameState.tileGrid[i].GetPositionY() + 40);
 
 				SDL_Rect biscuitRect = { posX, posY, 20, 20 };
 				SDL_RenderCopy(renderer, gameState.biscuitTexture, NULL, &biscuitRect);
 			}
+		}
+
+		for (int i = 0; i < 4; i++) {
+			gameState.enemySprites[i].Render(renderer);
 		}
 
 		gameState.playerSprite.Render(renderer);
@@ -412,6 +466,14 @@ void Render() {
 		if (gameState.GetState() == TwoPlayer) {
 			gameState.playerTwoSprite.Render(renderer);
 			gameState.playerTwoScoreText.Render(renderer);
+		}
+	} else if (gameState.GetState() == EndGameOnePlayer) {
+		for (int i = 0; i < Globals::END_GAME_ONE_ITEMS; i++) {
+			gameState.endGameOneText[i].Render(renderer);
+		}
+	} else if (gameState.GetState() == EndGameTwoPlayer) {
+		for (int i = 0; i < Globals::END_GAME_TWO_ITEMS; i++) {
+			gameState.endGameTwoText[i].Render(renderer);
 		}
 	}
 

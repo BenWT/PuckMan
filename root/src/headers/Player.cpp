@@ -10,10 +10,12 @@
 #include "Player.h"
 
 void Player::Render(SDL_Renderer* renderer) {
-    SDL_Rect drawRect = destRect;
-    drawRect.x += (int)offsetX;
-    drawRect.y += (int)offsetY;
-    SDL_RenderCopy(renderer, texture, (srcRect.w == -1) ? NULL : &srcRect, &drawRect);
+    if (alive)  {
+        SDL_Rect drawRect = destRect;
+        drawRect.x += (int)offsetX;
+        drawRect.y += (int)offsetY;
+        SDL_RenderCopy(renderer, texture, (srcRect.w == -1) ? NULL : &srcRect, &drawRect);
+    }
 }
 
 bool Player::CanMove(GameState& gameState, MoveDirection direction) {

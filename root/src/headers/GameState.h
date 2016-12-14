@@ -8,6 +8,7 @@
 #include "Globals.h"
 #include "Sprite.h"
 #include "Player.h"
+#include "Enemy.h"
 #include "Tile.h"
 #include "FontSprite.h"
 
@@ -17,6 +18,9 @@ public:
 	Player playerTwoSprite;
 	std::array<Tile, Globals::TILE_COUNT> tileGrid;
 	std::array<FontSprite, Globals::MAIN_MENU_ITEMS> mainMenuText;
+	std::array<FontSprite, Globals::END_GAME_ONE_ITEMS> endGameOneText;
+	std::array<FontSprite, Globals::END_GAME_TWO_ITEMS> endGameTwoText;
+	std::array<Enemy, 4> enemySprites;
 	FontSprite playerScoreText;
 	FontSprite playerTwoScoreText;
 	SDL_Texture* biscuitTexture;
