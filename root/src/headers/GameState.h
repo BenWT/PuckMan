@@ -50,6 +50,8 @@ public:
 
 	// Menu
 	int mainMenuSelectionIndex = 1;
+	int endGameOneSelectionIndex = 1;
+	int endGameTwoSelectionIndex = 1;
 	double joystickSwapTime = 0.25;
 	double joystickTimer = 0.0;
 

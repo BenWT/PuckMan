@@ -26,6 +26,7 @@ void InitialiseSprites();
 void ProcessInput();
 void Update(double&);
 void Render();
+void Reset();
 SDL_Rect NewRect(int x, int y, int w, int h) {
 	SDL_Rect r = { x, y, w, h }; return r;
 }
@@ -45,9 +46,11 @@ bool running;
 
 // Menu Callback Functions
 void onePlayerCallback() {
+	Reset();
 	gameState.SetState(OnePlayer);
 }
 void twoPlayerCallback() {
+	Reset();
 	gameState.SetState(TwoPlayer);
 }
 void optionsCallback() {
@@ -56,6 +59,17 @@ void optionsCallback() {
 void quitCallback() {
 	SDL_Log("Program quit.");
 	running = false;
+}
+void retryOnePlayerCallback() {
+	Reset();
+	gameState.SetState(OnePlayer);
+}
+void retryTwoPlayerCallback() {
+	Reset();
+	gameState.SetState(TwoPlayer);
+}
+void backToMenuCallback() {
+	gameState.SetState(MainMenu);
 }
 
 int main(int argc, char *argv[]) {
@@ -163,16 +177,21 @@ void InitialiseSprites() {
 	delete quit;
 
 	// One Player Death Menu
-	FontSprite* gameOverOne = new FontSprite("Game Over!", font, fontS, 0, 0, mainMenuScale * 2, false, false);
-	gameOverOne->CentreHorizontal();
-	gameState.endGameOneText[0] = *gameOverOne;
-	delete gameOverOne;
-
-	// Two Player Death Menu
-	FontSprite* gameOverTwo = new FontSprite("Game Over!", font, fontS, 0, 0, mainMenuScale * 2, false, false);
-	gameOverTwo->CentreHorizontal();
-	gameState.endGameTwoText[0] = *gameOverTwo;
-	delete gameOverTwo;
+	FontSprite* gameOver = new FontSprite("Game Over!", font, fontS, 0, 0, mainMenuScale * 2, false, false);
+	FontSprite* retryOnePlayer = new FontSprite("Retry?", font, fontS, 0, Globals::SCREEN_HEIGHT - (2 * Globals::FONT_HEIGHT * mainMenuScale), mainMenuScale, true, true, retryOnePlayerCallback);
+	FontSprite* retryTwoPlayer = new FontSprite("Retry?", font, fontS, 0, Globals::SCREEN_HEIGHT - (2 * Globals::FONT_HEIGHT * mainMenuScale), mainMenuScale, true, true, retryTwoPlayerCallback);
+	FontSprite* mainMenu = new FontSprite("Back to Menu", font, fontS, 0, Globals::SCREEN_HEIGHT - (Globals::FONT_HEIGHT * mainMenuScale), mainMenuScale, true, true, backToMenuCallback);
+	gameOver->CentreHorizontal();
+	retryOnePlayer->CentreHorizontal();
+	retryTwoPlayer->CentreHorizontal();
+	mainMenu->CentreHorizontal();
+	gameState.endGameOneText[0] = *gameOver;
+	gameState.endGameTwoText[0] = *gameOver;
+	gameState.endGameOneText[1] = *retryOnePlayer;
+	gameState.endGameTwoText[1] = *retryTwoPlayer;
+	gameState.endGameOneText[2] = *mainMenu;
+	gameState.endGameTwoText[2] = *mainMenu;
+	delete gameOver;
 
 	// Score Text
 	FontSprite* playerOneScoreText = new FontSprite("Score: ", font, fontS, 80, Globals::TILE_ROWS * Globals::TILE_SIZE, 10, false, false);
@@ -360,8 +379,112 @@ void Update(double &deltaTime) {
 			if (gameState.mainMenuText[gameState.mainMenuSelectionIndex].canClick)
 				gameState.mainMenuText[gameState.mainMenuSelectionIndex].DoClick();
 		}
+	} else if (gameState.GetState() == EndGameOnePlayer) {
+		for (int i = 0; i < Globals::END_GAME_ONE_ITEMS; i++) {
+			if (gameState.endGameOneText[i].canSelect) {
+				gameState.endGameOneText[i].selected = gameState.endGameOneText[i].CheckBounds(gameState.mouseX, gameState.mouseY);
 
+				if (gameState.endGameOneText[i].selected) {
+					gameState.endGameOneSelectionIndex = i;
+					selectedWithMouse = true;
+				}
+			}
 
+			if (gameState.mouseClicked) {
+				if (gameState.endGameOneText[i].canClick) {
+					if (gameState.endGameOneText[i].CheckBounds(gameState.mouseX, gameState.mouseY)) {
+						gameState.endGameOneText[i].DoClick();
+					}
+				}
+			}
+		}
+
+		if (!selectedWithMouse) {
+			bool moveUp = false, moveDown = false;
+
+			if (gameState.leftJoystickY > Globals::JOYSTICK_DEAD_ZONE && gameState.joystickTimer >= gameState.joystickSwapTime) {
+				moveDown = true;
+				gameState.joystickTimer = 0.0;
+			} else if (gameState.leftJoystickY < -Globals::JOYSTICK_DEAD_ZONE && gameState.joystickTimer >= gameState.joystickSwapTime) {
+				moveUp = true;
+				gameState.joystickTimer = 0.0;
+			}
+
+			if (gameState.w || gameState.up) moveUp = true;
+			else if (gameState.s || gameState.down) moveDown = true;
+
+			if (moveUp) {
+				int newIndex = gameState.endGameOneSelectionIndex - 1;
+				if (newIndex >= 0 && gameState.endGameOneText[newIndex].canSelect) gameState.endGameOneSelectionIndex--;
+			} else if (moveDown) {
+				int newIndex = gameState.endGameOneSelectionIndex + 1;
+				if (newIndex < Globals::MAIN_MENU_ITEMS && gameState.endGameOneText[newIndex].canSelect) gameState.endGameOneSelectionIndex++;
+			}
+
+			for (int i = 0; i < Globals::MAIN_MENU_ITEMS; i++) {
+				if (gameState.endGameOneText[i].canSelect) {
+					gameState.endGameOneText[i].selected = (i == gameState.endGameOneSelectionIndex);
+				}
+			}
+		}
+
+		if (gameState.enter || gameState.aGamePad) {
+			if (gameState.endGameOneText[gameState.endGameOneSelectionIndex].canClick)
+				gameState.endGameOneText[gameState.endGameOneSelectionIndex].DoClick();
+		}
+	} else if (gameState.GetState() == EndGameTwoPlayer) {
+		for (int i = 0; i < Globals::END_GAME_ONE_ITEMS; i++) {
+			if (gameState.endGameTwoText[i].canSelect) {
+				gameState.endGameTwoText[i].selected = gameState.endGameTwoText[i].CheckBounds(gameState.mouseX, gameState.mouseY);
+
+				if (gameState.endGameTwoText[i].selected) {
+					gameState.endGameTwoSelectionIndex = i;
+					selectedWithMouse = true;
+				}
+			}
+
+			if (gameState.mouseClicked) {
+				if (gameState.endGameTwoText[i].canClick) {
+					if (gameState.endGameTwoText[i].CheckBounds(gameState.mouseX, gameState.mouseY)) {
+						gameState.endGameTwoText[i].DoClick();
+					}
+				}
+			}
+		}
+
+		if (!selectedWithMouse) {
+			bool moveUp = false, moveDown = false;
+
+			if (gameState.leftJoystickY > Globals::JOYSTICK_DEAD_ZONE && gameState.joystickTimer >= gameState.joystickSwapTime) {
+				moveDown = true;
+				gameState.joystickTimer = 0.0;
+			} else if (gameState.leftJoystickY < -Globals::JOYSTICK_DEAD_ZONE && gameState.joystickTimer >= gameState.joystickSwapTime) {
+				moveUp = true;
+				gameState.joystickTimer = 0.0;
+			}
+
+			if (gameState.w || gameState.up) moveUp = true;
+			else if (gameState.s || gameState.down) moveDown = true;
+
+			if (moveUp) {
+				int newIndex = gameState.endGameTwoSelectionIndex - 1;
+				if (newIndex >= 0 && gameState.endGameTwoText[newIndex].canSelect) gameState.endGameTwoSelectionIndex--;
+			} else if (moveDown) {
+				int newIndex = gameState.endGameTwoSelectionIndex + 1;
+				if (newIndex < Globals::MAIN_MENU_ITEMS && gameState.endGameTwoText[newIndex].canSelect) gameState.endGameTwoSelectionIndex++;
+			}
+
+			for (int i = 0; i < Globals::MAIN_MENU_ITEMS; i++) {
+				if (gameState.endGameTwoText[i].canSelect) {
+					gameState.endGameTwoText[i].selected = (i == gameState.endGameTwoSelectionIndex);
+				}
+			}
+		}
+
+		if (gameState.enter || gameState.aGamePad) {
+			if (gameState.endGameTwoText[gameState.endGameTwoSelectionIndex].canClick)
+				gameState.endGameTwoText[gameState.endGameTwoSelectionIndex].DoClick();
+		}
 	} else if (gameState.GetState() == OnePlayer) {
 		// Player One
 		if (gameState.w || gameState.up || gameState.leftJoystickY < -Globals::JOYSTICK_DEAD_ZONE) p1Up = true;
@@ -425,10 +548,6 @@ void Update(double &deltaTime) {
 			gameState.playerTwoSprite.DoMove(gameState, speed);
 			gameState.playerTwoScoreText.ChangeText("Score: " + to_string(gameState.playerTwoSprite.score));
 		}
-	} else if (gameState.GetState() == EndGameOnePlayer) {
-
-	} else if (gameState.GetState() == EndGameTwoPlayer) {
-
 	}
 
 	gameState.joystickTimer += deltaTime;
@@ -440,6 +559,14 @@ void Render() {
 	if (gameState.GetState() == MainMenu) {
 		for (int i = 0; i < Globals::MAIN_MENU_ITEMS; i++) {
 			gameState.mainMenuText[i].Render(renderer);
+		}
+	} else if (gameState.GetState() == EndGameOnePlayer) {
+		for (int i = 0; i < Globals::END_GAME_ONE_ITEMS; i++) {
+			gameState.endGameOneText[i].Render(renderer);
+		}
+	} else if (gameState.GetState() == EndGameTwoPlayer) {
+		for (int i = 0; i < Globals::END_GAME_TWO_ITEMS; i++) {
+			gameState.endGameTwoText[i].Render(renderer);
 		}
 	} else if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
 
@@ -467,17 +594,29 @@ void Render() {
 			gameState.playerTwoSprite.Render(renderer);
 			gameState.playerTwoScoreText.Render(renderer);
 		}
-	} else if (gameState.GetState() == EndGameOnePlayer) {
-		for (int i = 0; i < Globals::END_GAME_ONE_ITEMS; i++) {
-			gameState.endGameOneText[i].Render(renderer);
-		}
-	} else if (gameState.GetState() == EndGameTwoPlayer) {
-		for (int i = 0; i < Globals::END_GAME_TWO_ITEMS; i++) {
-			gameState.endGameTwoText[i].Render(renderer);
-		}
 	}
 
 	// Finalise Render
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 	SDL_RenderPresent(renderer);
+}
+
+void Reset() {
+	gameState.playerSprite.alive = true;
+	gameState.playerSprite.score = 0;
+	gameState.playerSprite.tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
+	gameState.playerSprite.SetPositionFromTile(gameState);
+	gameState.playerSprite.moveDirection = Left;
+
+	gameState.playerTwoSprite.alive = true;
+	gameState.playerTwoSprite.score = 0;
+	gameState.playerTwoSprite.tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
+	gameState.playerTwoSprite.SetPositionFromTile(gameState);
+	gameState.playerTwoSprite.moveDirection = Right;
+
+	for (int i = 0; i < Globals::TILE_COUNT; i++) {
+		if (gameState.tileGrid[i].GetState() == -1) {
+			gameState.tileGrid[i].Reset();
+		}
+	}
 }

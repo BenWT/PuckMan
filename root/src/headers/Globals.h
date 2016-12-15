@@ -28,8 +28,8 @@ public:
     const static int ENEMY_START_Y[];
 
 	const static int MAIN_MENU_ITEMS = 5;
-    const static int END_GAME_ONE_ITEMS = 1;
-    const static int END_GAME_TWO_ITEMS = 1;
+    const static int END_GAME_ONE_ITEMS = 3;
+    const static int END_GAME_TWO_ITEMS = 3;
 
 	const static int JOYSTICK_DEAD_ZONE = 8000;
 };

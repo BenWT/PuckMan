@@ -18,7 +18,6 @@ void Tile::SetState(int state) {
 int Tile::GetState() {
     return state;
 }
-
 bool Tile::CheckBiscuit() {
     return hasBiscuit;
 }
@@ -53,6 +52,12 @@ double Tile::GetTextureX() {
 }
 double Tile::GetTextureY() {
     return texturePosition->y;
+}
+
+void Tile::Reset() {
+	if (this->state == -1) {
+		this->hasBiscuit = true;
+	}
 }
 
 Tile::Tile() {

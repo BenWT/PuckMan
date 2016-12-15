@@ -26,6 +26,7 @@ public:
 	double GetTextureX();
 	double GetTextureY();
 
+	void Reset();
 	Tile();
 	Tile(int, int);
 private:
