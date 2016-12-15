@@ -12,9 +12,17 @@
 void Player::Render(SDL_Renderer* renderer) {
     if (alive)  {
         SDL_Rect drawRect = destRect;
-        drawRect.x += (int)offsetX;
-        drawRect.y += (int)offsetY;
-        SDL_RenderCopy(renderer, texture, (srcRect.w == -1) ? NULL : &srcRect, &drawRect);
+        drawRect.x += (int)offsetX; drawRect.y += (int)offsetY;
+        int angle = 0;
+
+        switch (moveDirection) {
+            case Left: angle = 0; break;
+            case Up: angle = 90; break;
+            case Right: angle = 180; break;
+            case Down: angle = 270; break;
+        }
+
+        SDL_RenderCopyEx(renderer, texture, (srcRect.w == -1) ? NULL : &srcRect, &drawRect, angle, NULL, SDL_FLIP_NONE);
     }
 }
 
