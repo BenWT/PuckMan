@@ -2,10 +2,15 @@
 // Copyright (c) 2016 by Ben Townshend. All Rights Reserved.
 //
 
+// MSVCP140D.dll
+// VCRUNTIME140D.dll
+// ucrtbased.dll
+
 #include "headers/Globals.h"
 
 #include <iostream>
 #include <chrono>
+#include <string>
 #include <cmath>
 #include "SDL.h"
 #include "SDL_gamecontroller.h"
@@ -35,6 +40,20 @@ high_resolution_clock::time_point NowTime() {
 }
 double TimeSinceLastFrame(high_resolution_clock::time_point frameTime) {
 	return (duration_cast<microseconds>(NowTime() - frameTime).count()) / 1000000.0;
+}
+string basePath;
+string GetPathFromFullPath(const string& str) {
+	size_t found = str.find_last_of("/\\");
+	if (found == numeric_limits<size_t>::max()) return "";
+	else return (str.substr(0, found) + "\\");
+}
+string GetfilenameFromFullPath(const string& str) {
+	size_t found = str.find_last_of("/\\");
+	if (found == numeric_limits<size_t>::max()) return str;
+	else return (str.substr(found + 1));
+}
+string AddBase(string path) {
+	return basePath + path;
 }
 
 // Global Variables
@@ -73,6 +92,10 @@ void backToMenuCallback() {
 }
 
 int main(int argc, char *argv[]) {
+	// Get Base Path
+	basePath = argv[0];
+	basePath = GetPathFromFullPath(basePath).c_str();
+
 	// Initialise SDL
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) != 0) {
 		SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL failed to initialise. \n");
@@ -138,12 +161,13 @@ int main(int argc, char *argv[]) {
 
 void InitialiseSprites() {
 	// Surfaces
-	SDL_Surface* playerSurface = SDL_LoadBMP("assets/character.bmp");
-	SDL_Surface* enemySurface = IMG_Load("assets/ghost.png");
-	SDL_Surface* tileSurface = IMG_Load("assets/tiles.png");
-	SDL_Surface* biscuitSurface = SDL_LoadBMP("assets/biscuit.bmp");
-	SDL_Surface* fontSurface = IMG_Load("assets/fonts.png");
-	SDL_Surface* fontSelectedSurface = IMG_Load("assets/fontsSelected.png");
+	cout << AddBase("123").c_str() << endl;
+	SDL_Surface* playerSurface = IMG_Load(AddBase("assets/puckman.png").c_str());
+	SDL_Surface* enemySurface = IMG_Load(AddBase("assets/ghost.png").c_str());
+	SDL_Surface* tileSurface = IMG_Load(AddBase("assets/tiles.png").c_str());
+	SDL_Surface* biscuitSurface = SDL_LoadBMP(AddBase("assets/biscuit.bmp").c_str());
+	SDL_Surface* fontSurface = IMG_Load(AddBase("assets/fonts.png").c_str());
+	SDL_Surface* fontSelectedSurface = IMG_Load(AddBase("assets/fontsSelected.png").c_str());
 
 	// Textures
 	SDL_Texture* playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
@@ -218,6 +242,7 @@ void InitialiseSprites() {
 		e->tile = Globals::ENEMY_START_X[i] + (Globals::ENEMY_START_Y[i] * Globals::TILE_ROWS);
 		e->SetPositionFromTile(gameState);
 		e->moveDirection = Left;
+		e->canBiscuit = false;
 		gameState.enemySprites[i] = *e;
 		delete e;
 	}
@@ -302,10 +327,18 @@ void ProcessInput() {
 					case SDLK_a: gameState.a = true; break;
 					case SDLK_s: gameState.s = true; break;
 					case SDLK_d: gameState.d = true; break;
-					case SDLK_UP: gameState.up = true; break;
-					case SDLK_LEFT: gameState.left = true; break;
-					case SDLK_DOWN: gameState.down = true; break;
-					case SDLK_RIGHT: gameState.right = true; break;
+					case SDLK_UP:
+						gameState.up = true;
+						break;
+					case SDLK_LEFT:
+						gameState.left = true;
+						break;
+					case SDLK_DOWN:
+						gameState.down = true;
+						break;
+					case SDLK_RIGHT:
+						gameState.right = true;
+						break;
 					case SDLK_KP_ENTER: gameState.enter = true; break;
 					case SDLK_RETURN: gameState.enter = true; break;
 					case SDLK_ESCAPE: SDL_Log("Program quit."); running = false; break;
@@ -321,7 +354,8 @@ void ProcessInput() {
 }
 
 void Update(double &deltaTime) {
-	double speed = deltaTime * Globals::PLAYER_SPEED;
+	double p1Speed = deltaTime * Globals::PLAYER_SPEED;
+	double p2Speed = deltaTime * Globals::PLAYER_SPEED;
 	bool selectedWithMouse = false;
 	bool p1Up = false, p1Left = false, p1Down = false, p1Right = false;
 	bool p2Up = false, p2Left = false, p2Down = false, p2Right = false;
@@ -410,6 +444,8 @@ void Update(double &deltaTime) {
 				gameState.joystickTimer = 0.0;
 			}
 
+			// Crash in here
+
 			if (gameState.w || gameState.up) moveUp = true;
 			else if (gameState.s || gameState.down) moveDown = true;
 
@@ -421,7 +457,7 @@ void Update(double &deltaTime) {
 				if (newIndex < Globals::MAIN_MENU_ITEMS && gameState.endGameOneText[newIndex].canSelect) gameState.endGameOneSelectionIndex++;
 			}
 
-			for (int i = 0; i < Globals::MAIN_MENU_ITEMS; i++) {
+			for (int i = 0; i < Globals::END_GAME_ONE_ITEMS; i++) {
 				if (gameState.endGameOneText[i].canSelect) {
 					gameState.endGameOneText[i].selected = (i == gameState.endGameOneSelectionIndex);
 				}
@@ -433,7 +469,7 @@ void Update(double &deltaTime) {
 				gameState.endGameOneText[gameState.endGameOneSelectionIndex].DoClick();
 		}
 	} else if (gameState.GetState() == EndGameTwoPlayer) {
-		for (int i = 0; i < Globals::END_GAME_ONE_ITEMS; i++) {
+		for (int i = 0; i < Globals::END_GAME_TWO_ITEMS; i++) {
 			if (gameState.endGameTwoText[i].canSelect) {
 				gameState.endGameTwoText[i].selected = gameState.endGameTwoText[i].CheckBounds(gameState.mouseX, gameState.mouseY);
 
@@ -474,7 +510,7 @@ void Update(double &deltaTime) {
 				if (newIndex < Globals::MAIN_MENU_ITEMS && gameState.endGameTwoText[newIndex].canSelect) gameState.endGameTwoSelectionIndex++;
 			}
 
-			for (int i = 0; i < Globals::MAIN_MENU_ITEMS; i++) {
+			for (int i = 0; i < Globals::END_GAME_TWO_ITEMS; i++) {
 				if (gameState.endGameTwoText[i].canSelect) {
 					gameState.endGameTwoText[i].selected = (i == gameState.endGameTwoSelectionIndex);
 				}
@@ -541,12 +577,28 @@ void Update(double &deltaTime) {
 			}
 		}
 
-		gameState.playerSprite.DoMove(gameState, speed);
-		gameState.playerScoreText.ChangeText("Score: " + to_string(gameState.playerSprite.score));
+		double leftJoyStickValue = 1;
+		double rightJoyStickValue = 1;
+		if (joystick) {
+			leftJoyStickValue = max(abs(gameState.leftJoystickX), abs(gameState.leftJoystickY)) / 32767.0;
+			rightJoyStickValue = max(abs(gameState.rightJoystickX), abs(gameState.rightJoystickY)) / 32767.0;
+		}
 
-		if (gameState.GetState() == TwoPlayer) {
-			gameState.playerTwoSprite.DoMove(gameState, speed);
+		if (gameState.GetState() == OnePlayer) {
+			gameState.playerSprite.DoMove(gameState, p1Speed * max(leftJoyStickValue, rightJoyStickValue));
+
+			gameState.playerScoreText.ChangeText("Score: " + to_string(gameState.playerSprite.score));
+		}
+		else if (gameState.GetState() == TwoPlayer) {
+			gameState.playerSprite.DoMove(gameState, p1Speed * leftJoyStickValue);
+			gameState.playerTwoSprite.DoMove(gameState, p2Speed * rightJoyStickValue);
+
+			gameState.playerScoreText.ChangeText("Score: " + to_string(gameState.playerSprite.score));
 			gameState.playerTwoScoreText.ChangeText("Score: " + to_string(gameState.playerTwoSprite.score));
+		}
+
+		for (int i = 0; i < 4; i++) {
+			gameState.enemySprites[i].PathFind(gameState, deltaTime);
 		}
 	}
 
@@ -613,6 +665,13 @@ void Reset() {
 	gameState.playerTwoSprite.tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
 	gameState.playerTwoSprite.SetPositionFromTile(gameState);
 	gameState.playerTwoSprite.moveDirection = Right;
+
+	for (int i = 0; i < 4; i++) {
+		gameState.enemySprites[i].alive = true;
+		gameState.enemySprites[i].tile = Globals::ENEMY_START_X[i] + (Globals::ENEMY_START_Y[i] * Globals::TILE_ROWS);
+		gameState.enemySprites[i].SetPositionFromTile(gameState);
+		gameState.enemySprites[i].moveDirection = Left;
+	}
 
 	for (int i = 0; i < Globals::TILE_COUNT; i++) {
 		if (gameState.tileGrid[i].GetState() == -1) {

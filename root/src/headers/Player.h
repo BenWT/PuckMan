@@ -13,6 +13,7 @@ class Player : public Sprite {
 public:
 	MoveDirection moveDirection;
 	bool alive = true;
+	bool canBiscuit = true;
 	int score = 0;
 	int tile;
 	double offsetX = 0;

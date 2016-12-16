@@ -137,9 +137,11 @@ bool Player::clampOffset(GameState& gameState) {
     }
 
     if (hasChanged) {
-        if (gameState.tileGrid[tile].CheckBiscuit()) {
-            gameState.tileGrid[tile].EatBiscuit();
-            score += Globals::BISCUIT_SCORE;
+        if (canBiscuit) {
+            if (gameState.tileGrid[tile].CheckBiscuit()) {
+                gameState.tileGrid[tile].EatBiscuit();
+                score += Globals::BISCUIT_SCORE;
+            }
         }
         return true;
     }
