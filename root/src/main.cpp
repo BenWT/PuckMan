@@ -243,6 +243,11 @@ void InitialiseSprites() {
 		e->SetPositionFromTile(gameState);
 		e->moveDirection = Left;
 		e->canBiscuit = false;
+		e->doAnimate = true;
+		e->frameTime = 0.15;
+		for (int j = 0; j < 2; j++) {
+			e->animStates.push_back(NewRect(j * 100,i * 100, 100, 100));
+		}
 		gameState.enemySprites[i] = *e;
 		delete e;
 	}
@@ -252,6 +257,11 @@ void InitialiseSprites() {
 	p1->tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
 	p1->SetPositionFromTile(gameState);
 	p1->moveDirection = Left;
+	p1->doAnimate = true;
+	p1->frameTime = 0.025;
+	for (int i = 0; i < 14; i++) {
+		p1->animStates.push_back(NewRect(i * 100, 0, 100, 100));
+	}
 	gameState.playerSprite = *p1;
 	delete p1;
 
@@ -260,6 +270,11 @@ void InitialiseSprites() {
 	p2->tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
 	p2->SetPositionFromTile(gameState);
 	p2->moveDirection = Right;
+	p2->doAnimate = true;
+	p2->frameTime = 0.025;
+	for (int i = 0; i < 14; i++) {
+		p2->animStates.push_back(NewRect(i * 100, 0, 100, 100));
+	}
 	gameState.playerTwoSprite = *p2;
 	delete p2;
 }
@@ -585,13 +600,13 @@ void Update(double &deltaTime) {
 		}
 
 		if (gameState.GetState() == OnePlayer) {
-			gameState.playerSprite.DoMove(gameState, p1Speed * max(leftJoyStickValue, rightJoyStickValue));
+			gameState.playerSprite.DoMove(gameState, p1Speed * max(leftJoyStickValue, rightJoyStickValue), deltaTime);
 
 			gameState.playerScoreText.ChangeText("Score: " + to_string(gameState.playerSprite.score));
 		}
 		else if (gameState.GetState() == TwoPlayer) {
-			gameState.playerSprite.DoMove(gameState, p1Speed * leftJoyStickValue);
-			gameState.playerTwoSprite.DoMove(gameState, p2Speed * rightJoyStickValue);
+			gameState.playerSprite.DoMove(gameState, p1Speed * leftJoyStickValue, deltaTime);
+			gameState.playerTwoSprite.DoMove(gameState, p2Speed * rightJoyStickValue, deltaTime);
 
 			gameState.playerScoreText.ChangeText("Score: " + to_string(gameState.playerSprite.score));
 			gameState.playerTwoScoreText.ChangeText("Score: " + to_string(gameState.playerTwoSprite.score));

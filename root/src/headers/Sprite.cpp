@@ -2,6 +2,7 @@
 // Copyright (c) 2016 by Ben Townshend. All Rights Reserved.
 //
 
+#include <iostream>
 #include "Sprite.h"
 #include "Globals.h"
 
@@ -16,8 +17,21 @@ void Sprite::SetTexture(SDL_Texture* texture) {
     this->texture = texture;
 }
 
+void Sprite::CycleAnims(double deltaTime) {
+    if (doAnimate) {
+        if (animCounter >= frameTime) {
+            currentAnim++;
+            animCounter = 0.0;
+        }
+
+        if (currentAnim >= animStates.size()) currentAnim = 0;
+        animCounter += deltaTime;
+    }
+}
+
 void Sprite::Render(SDL_Renderer* renderer) {
-    SDL_RenderCopy(renderer, texture, (srcRect.w == -1) ? NULL : &srcRect, &destRect);
+    if (doAnimate) SDL_RenderCopy(renderer, texture, &animStates.at(currentAnim), &destRect);
+    else SDL_RenderCopy(renderer, texture, (srcRect.w == -1) ? NULL : &srcRect, &destRect);
 }
 
 Sprite::Sprite() {}

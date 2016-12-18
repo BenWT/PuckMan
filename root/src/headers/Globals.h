@@ -19,7 +19,7 @@ public:
     const static int SCREEN_HEIGHT = SCREEN_WIDTH + SCORE_REGION;
     const static int PLAYER_START_X = 14;
     const static int PLAYER_START_Y = 16;
-	const static int PLAYER_SPEED = 250;
+	const static int PLAYER_SPEED = 350;
 	const static int BISCUIT_SCORE = 50;
 	const static int FONT_WIDTH = 9;
     const static int FONT_HEIGHT = 13;

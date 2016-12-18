@@ -22,7 +22,8 @@ void Player::Render(SDL_Renderer* renderer) {
             case Down: angle = 270; break;
         }
 
-        SDL_RenderCopyEx(renderer, texture, (srcRect.w == -1) ? NULL : &srcRect, &drawRect, angle, NULL, SDL_FLIP_NONE);
+        if (doAnimate) SDL_RenderCopyEx(renderer, texture, &animStates.at(currentAnim), &drawRect, angle, NULL, SDL_FLIP_NONE);
+        else SDL_RenderCopyEx(renderer, texture, (srcRect.w == -1) ? NULL : &srcRect, &drawRect, angle, NULL, SDL_FLIP_NONE);
     }
 }
 
@@ -38,12 +39,14 @@ bool Player::CanMove(GameState& gameState, MoveDirection direction) {
     return false;
 }
 
-void Player::DoMove(GameState& gameState, double moveAmount) {
+void Player::DoMove(GameState& gameState, double moveAmount, double deltaTime) {
     int i = getNextIndex(moveDirection);
 
     if (tileExists(i)) {
         int state = gameState.tileGrid[i].GetState();
         if (state == 0 || state == -1) {
+            CycleAnims(deltaTime);
+
 			if (moveDirection == Up) {
 				offsetY -= moveAmount;
 				returnToZero(offsetX, moveAmount);

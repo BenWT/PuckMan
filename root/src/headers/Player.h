@@ -20,7 +20,7 @@ public:
 	double offsetY = 0;
 
 	bool CanMove(GameState&, MoveDirection);
-	void DoMove(GameState&, double);
+	void DoMove(GameState&, double, double);
 	void Reset(double);
 	void Render(SDL_Renderer* renderer); // overwrite Render
 	void SetPositionFromTile(GameState&);

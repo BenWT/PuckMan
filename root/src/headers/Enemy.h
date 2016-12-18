@@ -10,12 +10,15 @@
 #include "Tile.h"
 
 class Enemy : public Player {
-public:void PathFind(GameState&);
+public:
+    void PathFind(GameState&);
 
     double timer = 1;
-    int toggle = rand() % 10;
 
     void PathFind(GameState&, double);
     void Render(SDL_Renderer* renderer); // overwrite Render
     using Player::Player;
+private:
+    int toggle = rand() % 10;
+    int currentToggle = 0;
 };
