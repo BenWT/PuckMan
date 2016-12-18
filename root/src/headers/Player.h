@@ -12,6 +12,7 @@ class GameState;
 class Player : public Sprite {
 public:
 	MoveDirection moveDirection;
+	int lives = Globals::PLAYER_LIVES;
 	bool alive = true;
 	bool canBiscuit = true;
 	int score = 0;
@@ -27,6 +28,7 @@ public:
 	using Sprite::Sprite; // inherit constructors
 
 private:
+	double deathTimer;
 	int getNextIndex(MoveDirection);
 	bool tileExists(int);
 	bool clampOffset(GameState&);

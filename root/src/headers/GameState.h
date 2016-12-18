@@ -17,9 +17,12 @@ public:
 	Player playerSprite;
 	Player playerTwoSprite;
 	std::array<Tile, Globals::TILE_COUNT> tileGrid;
-	std::array<FontSprite, Globals::MAIN_MENU_ITEMS> mainMenuText;
+	/* std::array<FontSprite, Globals::MAIN_MENU_ITEMS> mainMenuText;
 	std::array<FontSprite, Globals::END_GAME_ONE_ITEMS> endGameOneText;
-	std::array<FontSprite, Globals::END_GAME_TWO_ITEMS> endGameTwoText;
+	std::array<FontSprite, Globals::END_GAME_TWO_ITEMS> endGameTwoText;*/
+	std::vector<FontSprite> mainMenuText;
+	std::vector<FontSprite> endGameOneText;
+	std::vector<FontSprite> endGameTwoText;
 	std::array<Enemy, 4> enemySprites;
 	FontSprite playerScoreText;
 	FontSprite playerTwoScoreText;

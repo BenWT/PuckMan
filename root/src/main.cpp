@@ -189,11 +189,16 @@ void InitialiseSprites() {
 	twoPlayer->CentreHorizontal();
 	options->CentreHorizontal();
 	quit->CentreHorizontal();
-	gameState.mainMenuText[0] = *title;
+	/*gameState.mainMenuText[0] = *title;
 	gameState.mainMenuText[1] = *onePlayer;
 	gameState.mainMenuText[2] = *twoPlayer;
 	gameState.mainMenuText[3] = *options;
-	gameState.mainMenuText[4] = *quit;
+	gameState.mainMenuText[4] = *quit;*/
+	gameState.mainMenuText.push_back(*title);
+	gameState.mainMenuText.push_back(*onePlayer);
+	gameState.mainMenuText.push_back(*twoPlayer);
+	gameState.mainMenuText.push_back(*options);
+	gameState.mainMenuText.push_back(*quit);
 	delete title;
 	delete onePlayer;
 	delete twoPlayer;
@@ -209,12 +214,18 @@ void InitialiseSprites() {
 	retryOnePlayer->CentreHorizontal();
 	retryTwoPlayer->CentreHorizontal();
 	mainMenu->CentreHorizontal();
-	gameState.endGameOneText[0] = *gameOver;
+	gameState.endGameOneText.push_back(*gameOver);
+	gameState.endGameOneText.push_back(*retryOnePlayer);
+	gameState.endGameOneText.push_back(*mainMenu);
+	gameState.endGameTwoText.push_back(*gameOver);
+	gameState.endGameTwoText.push_back(*retryTwoPlayer);
+	gameState.endGameTwoText.push_back(*mainMenu);
+	/*gameState.endGameOneText[0] = *gameOver;
 	gameState.endGameTwoText[0] = *gameOver;
 	gameState.endGameOneText[1] = *retryOnePlayer;
 	gameState.endGameTwoText[1] = *retryTwoPlayer;
 	gameState.endGameOneText[2] = *mainMenu;
-	gameState.endGameTwoText[2] = *mainMenu;
+	gameState.endGameTwoText[2] = *mainMenu;*/
 	delete gameOver;
 
 	// Score Text
@@ -375,28 +386,45 @@ void Update(double &deltaTime) {
 	bool p1Up = false, p1Left = false, p1Down = false, p1Right = false;
 	bool p2Up = false, p2Left = false, p2Down = false, p2Right = false;
 
-	if (gameState.GetState() == MainMenu) {
-		for (int i = 0; i < Globals::MAIN_MENU_ITEMS; i++) {
-			if (gameState.mainMenuText[i].canSelect) {
-				gameState.mainMenuText[i].selected = gameState.mainMenuText[i].CheckBounds(gameState.mouseX, gameState.mouseY);
+	if (gameState.GetState() == MainMenu || gameState.GetState() == EndGameOnePlayer || gameState.GetState() == EndGameTwoPlayer) {
+		int* index = &gameState.mainMenuSelectionIndex;
+		vector<FontSprite>* items = &gameState.mainMenuText;
+		vector<FontSprite>::iterator it;
 
-				if (gameState.mainMenuText[i].selected) {
-					gameState.mainMenuSelectionIndex = i;
+		if (gameState.GetState() == MainMenu) {
+			index = &gameState.mainMenuSelectionIndex;
+			items = &gameState.mainMenuText;
+		} else if (gameState.GetState() == EndGameOnePlayer) {
+			index = &gameState.endGameOneSelectionIndex;
+			items = &gameState.endGameOneText;
+		} else if (gameState.GetState() == EndGameTwoPlayer) {
+			index = &gameState.endGameTwoSelectionIndex;
+			items = &gameState.endGameTwoText;
+		}
+
+		for (it = items->begin(); it < items->end(); it++) {
+			if (it->canSelect) {
+				if (it->CheckBounds(gameState.mouseX, gameState.mouseY)) {
+					it->selected = true;
+					*index = distance(items->begin(), it);
 					selectedWithMouse = true;
+				} else {
+					it->selected = false;
 				}
 			}
 
 			if (gameState.mouseClicked) {
-				if (gameState.mainMenuText[i].canClick) {
-					if (gameState.mainMenuText[i].CheckBounds(gameState.mouseX, gameState.mouseY)) {
-						gameState.mainMenuText[i].DoClick();
+				if (it->canClick) {
+					if (it->CheckBounds(gameState.mouseX, gameState.mouseY)) {
+						it->DoClick();
+							cout << index << endl;
 					}
 				}
 			}
 		}
 
 		if (!selectedWithMouse) {
-			bool moveUp = false, moveDown = false;
+			bool moveUp = false; bool moveDown = false;
 
 			if (gameState.leftJoystickY > Globals::JOYSTICK_DEAD_ZONE && gameState.joystickTimer >= gameState.joystickSwapTime) {
 				moveDown = true;
@@ -411,131 +439,30 @@ void Update(double &deltaTime) {
 
 			if (moveUp) {
 				int newIndex = gameState.mainMenuSelectionIndex - 1;
-				if (newIndex >= 0 && gameState.mainMenuText[newIndex].canSelect) gameState.mainMenuSelectionIndex--;
+				if (newIndex >= 0 && items->at(newIndex).canSelect) gameState.mainMenuSelectionIndex--;
 			} else if (moveDown) {
 				int newIndex = gameState.mainMenuSelectionIndex + 1;
-				if (newIndex < Globals::MAIN_MENU_ITEMS && gameState.mainMenuText[newIndex].canSelect) gameState.mainMenuSelectionIndex++;
-			}
-
-			for (int i = 0; i < Globals::MAIN_MENU_ITEMS; i++) {
-				if (gameState.mainMenuText[i].canSelect) {
-					gameState.mainMenuText[i].selected = (i == gameState.mainMenuSelectionIndex);
-				}
-			}
-		}
-
-		if (gameState.enter || gameState.aGamePad) {
-			if (gameState.mainMenuText[gameState.mainMenuSelectionIndex].canClick)
-				gameState.mainMenuText[gameState.mainMenuSelectionIndex].DoClick();
-		}
-	} else if (gameState.GetState() == EndGameOnePlayer) {
-		for (int i = 0; i < Globals::END_GAME_ONE_ITEMS; i++) {
-			if (gameState.endGameOneText[i].canSelect) {
-				gameState.endGameOneText[i].selected = gameState.endGameOneText[i].CheckBounds(gameState.mouseX, gameState.mouseY);
-
-				if (gameState.endGameOneText[i].selected) {
-					gameState.endGameOneSelectionIndex = i;
-					selectedWithMouse = true;
+				if (newIndex < items->size()) {
+					if (items->at(newIndex).canSelect) gameState.mainMenuSelectionIndex++;
 				}
 			}
 
-			if (gameState.mouseClicked) {
-				if (gameState.endGameOneText[i].canClick) {
-					if (gameState.endGameOneText[i].CheckBounds(gameState.mouseX, gameState.mouseY)) {
-						gameState.endGameOneText[i].DoClick();
+			for (it = items->begin(); it < items->end(); it++) {
+				if (it->canSelect) {
+					it->selected = (distance(items->begin(), it) == gameState.mainMenuSelectionIndex);
+
+					if (gameState.mainMenuSelectionIndex == distance(items->begin(), it)) {
+						it->selected = true;
+
+						if (gameState.enter || gameState.aGamePad) {
+							if (it->canClick) it->DoClick();
+						}
 					}
 				}
 			}
 		}
 
-		if (!selectedWithMouse) {
-			bool moveUp = false, moveDown = false;
-
-			if (gameState.leftJoystickY > Globals::JOYSTICK_DEAD_ZONE && gameState.joystickTimer >= gameState.joystickSwapTime) {
-				moveDown = true;
-				gameState.joystickTimer = 0.0;
-			} else if (gameState.leftJoystickY < -Globals::JOYSTICK_DEAD_ZONE && gameState.joystickTimer >= gameState.joystickSwapTime) {
-				moveUp = true;
-				gameState.joystickTimer = 0.0;
-			}
-
-			// Crash in here
-
-			if (gameState.w || gameState.up) moveUp = true;
-			else if (gameState.s || gameState.down) moveDown = true;
-
-			if (moveUp) {
-				int newIndex = gameState.endGameOneSelectionIndex - 1;
-				if (newIndex >= 0 && gameState.endGameOneText[newIndex].canSelect) gameState.endGameOneSelectionIndex--;
-			} else if (moveDown) {
-				int newIndex = gameState.endGameOneSelectionIndex + 1;
-				if (newIndex < Globals::MAIN_MENU_ITEMS && gameState.endGameOneText[newIndex].canSelect) gameState.endGameOneSelectionIndex++;
-			}
-
-			for (int i = 0; i < Globals::END_GAME_ONE_ITEMS; i++) {
-				if (gameState.endGameOneText[i].canSelect) {
-					gameState.endGameOneText[i].selected = (i == gameState.endGameOneSelectionIndex);
-				}
-			}
-		}
-
-		if (gameState.enter || gameState.aGamePad) {
-			if (gameState.endGameOneText[gameState.endGameOneSelectionIndex].canClick)
-				gameState.endGameOneText[gameState.endGameOneSelectionIndex].DoClick();
-		}
-	} else if (gameState.GetState() == EndGameTwoPlayer) {
-		for (int i = 0; i < Globals::END_GAME_TWO_ITEMS; i++) {
-			if (gameState.endGameTwoText[i].canSelect) {
-				gameState.endGameTwoText[i].selected = gameState.endGameTwoText[i].CheckBounds(gameState.mouseX, gameState.mouseY);
-
-				if (gameState.endGameTwoText[i].selected) {
-					gameState.endGameTwoSelectionIndex = i;
-					selectedWithMouse = true;
-				}
-			}
-
-			if (gameState.mouseClicked) {
-				if (gameState.endGameTwoText[i].canClick) {
-					if (gameState.endGameTwoText[i].CheckBounds(gameState.mouseX, gameState.mouseY)) {
-						gameState.endGameTwoText[i].DoClick();
-					}
-				}
-			}
-		}
-
-		if (!selectedWithMouse) {
-			bool moveUp = false, moveDown = false;
-
-			if (gameState.leftJoystickY > Globals::JOYSTICK_DEAD_ZONE && gameState.joystickTimer >= gameState.joystickSwapTime) {
-				moveDown = true;
-				gameState.joystickTimer = 0.0;
-			} else if (gameState.leftJoystickY < -Globals::JOYSTICK_DEAD_ZONE && gameState.joystickTimer >= gameState.joystickSwapTime) {
-				moveUp = true;
-				gameState.joystickTimer = 0.0;
-			}
-
-			if (gameState.w || gameState.up) moveUp = true;
-			else if (gameState.s || gameState.down) moveDown = true;
-
-			if (moveUp) {
-				int newIndex = gameState.endGameTwoSelectionIndex - 1;
-				if (newIndex >= 0 && gameState.endGameTwoText[newIndex].canSelect) gameState.endGameTwoSelectionIndex--;
-			} else if (moveDown) {
-				int newIndex = gameState.endGameTwoSelectionIndex + 1;
-				if (newIndex < Globals::MAIN_MENU_ITEMS && gameState.endGameTwoText[newIndex].canSelect) gameState.endGameTwoSelectionIndex++;
-			}
-
-			for (int i = 0; i < Globals::END_GAME_TWO_ITEMS; i++) {
-				if (gameState.endGameTwoText[i].canSelect) {
-					gameState.endGameTwoText[i].selected = (i == gameState.endGameTwoSelectionIndex);
-				}
-			}
-		}
-
-		if (gameState.enter || gameState.aGamePad) {
-			if (gameState.endGameTwoText[gameState.endGameTwoSelectionIndex].canClick)
-				gameState.endGameTwoText[gameState.endGameTwoSelectionIndex].DoClick();
-		}
+		gameState.joystickTimer += deltaTime;
 	} else if (gameState.GetState() == OnePlayer) {
 		// Player One
 		if (gameState.w || gameState.up || gameState.leftJoystickY < -Globals::JOYSTICK_DEAD_ZONE) p1Up = true;
@@ -584,10 +511,12 @@ void Update(double &deltaTime) {
 
 		if (gameState.GetState() == OnePlayer) {
 			if (!gameState.playerSprite.alive) {
+				gameState.mainMenuSelectionIndex = 1;
 				gameState.SetState(EndGameOnePlayer);
 			}
 		} else if (gameState.GetState() == TwoPlayer) {
 			if (!gameState.playerSprite.alive && !gameState.playerTwoSprite.alive) {
+				gameState.mainMenuSelectionIndex = 1;
 				gameState.SetState(EndGameTwoPlayer);
 			}
 		}
@@ -616,8 +545,6 @@ void Update(double &deltaTime) {
 			gameState.enemySprites[i].PathFind(gameState, deltaTime);
 		}
 	}
-
-	gameState.joystickTimer += deltaTime;
 }
 
 void Render() {
