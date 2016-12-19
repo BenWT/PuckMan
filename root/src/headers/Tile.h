@@ -1,4 +1,4 @@
-//
+ //
 // Copyright (c) 2016 by Ben Townshend. All Rights Reserved.
 //
 
@@ -17,6 +17,8 @@ public:
 
 	bool CheckBiscuit();
 	void EatBiscuit();
+	bool CheckPill();
+	void EatPill();
 
 	Vector2* GetPosition();
 	Vector2* GetTexturePosition();
@@ -33,6 +35,7 @@ private:
 	Sprite sprite;
 	int state;
 	bool hasBiscuit = false;
+	bool hasPill = false;
 	Vector2* position;
 	Vector2* texturePosition;
 };

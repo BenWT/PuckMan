@@ -24,6 +24,12 @@ bool Tile::CheckBiscuit() {
 void Tile::EatBiscuit() {
     hasBiscuit = false;
 }
+bool Tile::CheckPill() {
+    return hasPill;
+}
+void Tile::EatPill() {
+
+}
 
 Vector2* Tile::GetPosition() {
     return position;
@@ -34,6 +40,9 @@ Vector2* Tile::GetTexturePosition() {
 void Tile::SetTexturePosition(int index) {
     if (Globals::GRID_TYPE[index] == -1) {
         this->hasBiscuit = true;
+        this->texturePosition = new Vector2(0, 0);
+    } else if (Globals::GRID_TYPE[index] == -2) {
+        this->hasPill = true;
         this->texturePosition = new Vector2(0, 0);
     } else {
 		int x = (Globals::GRID_TYPE[index] % 5) * Globals::TILE_SIZE;
@@ -57,7 +66,9 @@ double Tile::GetTextureY() {
 void Tile::Reset() {
 	if (this->state == -1) {
 		this->hasBiscuit = true;
-	}
+	} else if (this->state == -2) {
+        this->hasPill = true;
+    }
 }
 
 Tile::Tile() {

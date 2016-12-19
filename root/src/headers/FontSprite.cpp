@@ -8,35 +8,6 @@
 #include "FontSprite.h"
 #include "Globals.h"
 
-FontSprite::FontSprite(std::string text, SDL_Texture* tex, SDL_Texture* texS, int x, int y, double fontScale, bool canSelect, bool canClick) {
-	SDL_Rect src = {0, 0, Globals::FONT_WIDTH, Globals::FONT_HEIGHT};
-
-	this->text = text;
-	this->texture = tex;
-	this->selectedTexture = texS;
-	this->destRect = { x, y, (int)(text.size() * fontScale * Globals::FONT_WIDTH), (int)(fontScale * Globals::FONT_HEIGHT)};
-	this->srcRect = src;
-	this->fontScale = fontScale;
-	this->canSelect = canSelect;
-	this->canClick = canClick;
-	this->selected = false;
-}
-
-FontSprite::FontSprite(std::string text, SDL_Texture* tex, SDL_Texture* texS, int x, int y, double fontScale, bool canSelect, bool canClick, std::function<void()> onClick) {
-	SDL_Rect src = {0, 0, Globals::FONT_WIDTH, Globals::FONT_HEIGHT};
-
-	this->text = text;
-	this->texture = tex;
-	this->selectedTexture = texS;
-	this->destRect = { x, y, (int)(text.size() * fontScale * Globals::FONT_WIDTH), (int)(fontScale * Globals::FONT_HEIGHT)};
-	this->srcRect = src;
-	this->fontScale = fontScale;
-	this->canSelect = canSelect;
-	this->canClick = canClick;
-	this->selected = false;
-	this->onClick = onClick;
-}
-
 void FontSprite::CentreHorizontal() {
 	double width = text.size() * fontScale * Globals::FONT_WIDTH;
 
@@ -81,6 +52,35 @@ void FontSprite::Render(SDL_Renderer* renderer) {
 void FontSprite::ChangeText(std::string newText) {
 	this->text = newText;
 	this->destRect.w = (int)(text.size() * fontScale * Globals::FONT_WIDTH);
+}
+
+FontSprite::FontSprite(std::string text, SDL_Texture* tex, SDL_Texture* texS, int x, int y, double fontScale, bool canSelect, bool canClick) {
+	SDL_Rect src = {0, 0, Globals::FONT_WIDTH, Globals::FONT_HEIGHT};
+
+	this->text = text;
+	this->texture = tex;
+	this->selectedTexture = texS;
+	this->destRect = { x, y, (int)(text.size() * fontScale * Globals::FONT_WIDTH), (int)(fontScale * Globals::FONT_HEIGHT)};
+	this->srcRect = src;
+	this->fontScale = fontScale;
+	this->canSelect = canSelect;
+	this->canClick = canClick;
+	this->selected = false;
+}
+
+FontSprite::FontSprite(std::string text, SDL_Texture* tex, SDL_Texture* texS, int x, int y, double fontScale, bool canSelect, bool canClick, std::function<void()> onClick) {
+	SDL_Rect src = {0, 0, Globals::FONT_WIDTH, Globals::FONT_HEIGHT};
+
+	this->text = text;
+	this->texture = tex;
+	this->selectedTexture = texS;
+	this->destRect = { x, y, (int)(text.size() * fontScale * Globals::FONT_WIDTH), (int)(fontScale * Globals::FONT_HEIGHT)};
+	this->srcRect = src;
+	this->fontScale = fontScale;
+	this->canSelect = canSelect;
+	this->canClick = canClick;
+	this->selected = false;
+	this->onClick = onClick;
 }
 
 int FontSprite::getFontRow(char c) {

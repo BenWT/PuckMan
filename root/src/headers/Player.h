@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <vector>
 #include "Globals.h"
 #include "Sprite.h"
 #include "Tile.h"
@@ -13,6 +14,8 @@ class Player : public Sprite {
 public:
 	MoveDirection moveDirection;
 	int lives = Globals::PLAYER_LIVES;
+	double deathTime = 2.0;
+	double deathTimer = 2.0;
 	bool alive = true;
 	bool canBiscuit = true;
 	int score = 0;
@@ -28,7 +31,6 @@ public:
 	using Sprite::Sprite; // inherit constructors
 
 private:
-	double deathTimer;
 	int getNextIndex(MoveDirection);
 	bool tileExists(int);
 	bool clampOffset(GameState&);

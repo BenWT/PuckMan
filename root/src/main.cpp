@@ -2,10 +2,6 @@
 // Copyright (c) 2016 by Ben Townshend. All Rights Reserved.
 //
 
-// MSVCP140D.dll
-// VCRUNTIME140D.dll
-// ucrtbased.dll
-
 #include "headers/Globals.h"
 
 #include <iostream>
@@ -166,6 +162,8 @@ void InitialiseSprites() {
 	SDL_Surface* enemySurface = IMG_Load(AddBase("assets/ghost.png").c_str());
 	SDL_Surface* tileSurface = IMG_Load(AddBase("assets/tiles.png").c_str());
 	SDL_Surface* biscuitSurface = SDL_LoadBMP(AddBase("assets/biscuit.bmp").c_str());
+	SDL_Surface* pillSurface = IMG_Load(AddBase("assets/pill.png").c_str());
+	SDL_Surface* heartSurface = IMG_Load(AddBase("assets/heart.png").c_str());
 	SDL_Surface* fontSurface = IMG_Load(AddBase("assets/fonts.png").c_str());
 	SDL_Surface* fontSelectedSurface = IMG_Load(AddBase("assets/fontsSelected.png").c_str());
 
@@ -174,6 +172,8 @@ void InitialiseSprites() {
 	SDL_Texture* enemyTexture = SDL_CreateTextureFromSurface(renderer, enemySurface);
 	SDL_Texture* tileTexture = SDL_CreateTextureFromSurface(renderer, tileSurface);
 	gameState.biscuitTexture = SDL_CreateTextureFromSurface(renderer, biscuitSurface);
+	gameState.pillTexture = SDL_CreateTextureFromSurface(renderer, pillSurface);
+	gameState.heartTexture = SDL_CreateTextureFromSurface(renderer, heartSurface);
 	SDL_Texture* font = SDL_CreateTextureFromSurface(renderer, fontSurface);
 	SDL_Texture* fontS = SDL_CreateTextureFromSurface(renderer, fontSelectedSurface);
 
@@ -189,11 +189,6 @@ void InitialiseSprites() {
 	twoPlayer->CentreHorizontal();
 	options->CentreHorizontal();
 	quit->CentreHorizontal();
-	/*gameState.mainMenuText[0] = *title;
-	gameState.mainMenuText[1] = *onePlayer;
-	gameState.mainMenuText[2] = *twoPlayer;
-	gameState.mainMenuText[3] = *options;
-	gameState.mainMenuText[4] = *quit;*/
 	gameState.mainMenuText.push_back(*title);
 	gameState.mainMenuText.push_back(*onePlayer);
 	gameState.mainMenuText.push_back(*twoPlayer);
@@ -220,17 +215,11 @@ void InitialiseSprites() {
 	gameState.endGameTwoText.push_back(*gameOver);
 	gameState.endGameTwoText.push_back(*retryTwoPlayer);
 	gameState.endGameTwoText.push_back(*mainMenu);
-	/*gameState.endGameOneText[0] = *gameOver;
-	gameState.endGameTwoText[0] = *gameOver;
-	gameState.endGameOneText[1] = *retryOnePlayer;
-	gameState.endGameTwoText[1] = *retryTwoPlayer;
-	gameState.endGameOneText[2] = *mainMenu;
-	gameState.endGameTwoText[2] = *mainMenu;*/
 	delete gameOver;
 
 	// Score Text
-	FontSprite* playerOneScoreText = new FontSprite("Score: ", font, fontS, 80, Globals::TILE_ROWS * Globals::TILE_SIZE, 10, false, false);
-	FontSprite* playerTwoScoreText = new FontSprite("Score: ", font, fontS, (Globals::TILE_ROWS * Globals::TILE_SIZE / 2) + Globals::TILE_SIZE, Globals::TILE_ROWS * Globals::TILE_SIZE, 10, false, false);
+	FontSprite* playerOneScoreText = new FontSprite("Score: ", font, fontS, 80,  Globals::SCREEN_HEIGHT - (Globals::FONT_HEIGHT * 10), 10, false, false);
+	FontSprite* playerTwoScoreText = new FontSprite("Score: ", font, fontS, (Globals::TILE_ROWS * Globals::TILE_SIZE / 2) + Globals::TILE_SIZE, Globals::SCREEN_HEIGHT - (Globals::FONT_HEIGHT * 10), 10, false, false);
 	gameState.playerScoreText = *playerOneScoreText;
 	gameState.playerTwoScoreText = *playerTwoScoreText;
 	delete playerOneScoreText;
@@ -257,7 +246,7 @@ void InitialiseSprites() {
 		e->doAnimate = true;
 		e->frameTime = 0.15;
 		for (int j = 0; j < 2; j++) {
-			e->animStates.push_back(NewRect(j * 100,i * 100, 100, 100));
+			e->animStates.push_back(NewRect(j * 100, i * 100, 100, 100));
 		}
 		gameState.enemySprites[i] = *e;
 		delete e;
@@ -284,7 +273,7 @@ void InitialiseSprites() {
 	p2->doAnimate = true;
 	p2->frameTime = 0.025;
 	for (int i = 0; i < 14; i++) {
-		p2->animStates.push_back(NewRect(i * 100, 0, 100, 100));
+		p2->animStates.push_back(NewRect(i * 100, 100, 100, 100));
 	}
 	gameState.playerTwoSprite = *p2;
 	delete p2;
@@ -417,7 +406,6 @@ void Update(double &deltaTime) {
 				if (it->canClick) {
 					if (it->CheckBounds(gameState.mouseX, gameState.mouseY)) {
 						it->DoClick();
-							cout << index << endl;
 					}
 				}
 			}
@@ -500,23 +488,49 @@ void Update(double &deltaTime) {
 
 		for (int i = 0; i < 4; i++) {
 			if (gameState.playerSprite.tile == gameState.enemySprites[i].tile) {
-				gameState.playerSprite.alive = false;
+				if (gameState.playerSprite.deathTimer >= gameState.playerSprite.deathTime) {
+					gameState.playerSprite.lives--;
+					gameState.playerSprite.deathTimer = 0;
+
+					if (gameState.playerSprite.lives <= 0) {
+						gameState.playerSprite.alive = false;
+					}
+				}
 			}
-			if (gameState.GetState() == TwoPlayer) {
-				if (gameState.playerTwoSprite.tile == gameState.enemySprites[i].tile) {
-					gameState.playerTwoSprite.alive = false;
+			if (gameState.playerTwoSprite.tile == gameState.enemySprites[i].tile) {
+				if (gameState.GetState() == TwoPlayer) {
+					if (gameState.playerTwoSprite.deathTimer >= gameState.playerTwoSprite.deathTime) {
+						gameState.playerTwoSprite.lives--;
+						gameState.playerTwoSprite.deathTimer = 0;
+
+						if (gameState.playerTwoSprite.lives <= 0) {
+							gameState.playerTwoSprite.alive = false;
+						}
+					}
 				}
 			}
 		}
 
 		if (gameState.GetState() == OnePlayer) {
+			if (gameState.playerSprite.score >= Globals::TOTAL_SCORE) {
+				gameState.endGameOneText.at(0).ChangeText("Winner!");
+				gameState.endGameOneText.at(0).CentreHorizontal();
+				gameState.SetState(EndGameOnePlayer);
+			}
 			if (!gameState.playerSprite.alive) {
-				gameState.mainMenuSelectionIndex = 1;
+				gameState.endGameOneText.at(0).ChangeText("Game Over!");
+				gameState.endGameOneText.at(0).CentreHorizontal();
 				gameState.SetState(EndGameOnePlayer);
 			}
 		} else if (gameState.GetState() == TwoPlayer) {
+			if (gameState.playerSprite.score + gameState.playerTwoSprite.score >= Globals::TOTAL_SCORE) {
+				gameState.endGameTwoText.at(0).ChangeText("Winner!");
+				gameState.endGameTwoText.at(0).CentreHorizontal();
+				gameState.SetState(EndGameTwoPlayer);
+			}
 			if (!gameState.playerSprite.alive && !gameState.playerTwoSprite.alive) {
-				gameState.mainMenuSelectionIndex = 1;
+				gameState.endGameTwoText.at(0).ChangeText("Game Over!");
+				gameState.endGameTwoText.at(0).CentreHorizontal();
 				gameState.SetState(EndGameTwoPlayer);
 			}
 		}
@@ -575,6 +589,10 @@ void Render() {
 				SDL_Rect biscuitRect = { posX, posY, 20, 20 };
 				SDL_RenderCopy(renderer, gameState.biscuitTexture, NULL, &biscuitRect);
 			}
+			if (gameState.tileGrid[i].CheckPill()) {
+				SDL_Rect pillRect = { (int)(gameState.tileGrid[i].GetPositionX()), (int)(gameState.tileGrid[i].GetPositionY()), 100, 100 };
+				SDL_RenderCopyEx(renderer, gameState.pillTexture, NULL, &pillRect, 270, NULL, SDL_FLIP_NONE);
+			}
 		}
 
 		for (int i = 0; i < 4; i++) {
@@ -583,10 +601,17 @@ void Render() {
 
 		gameState.playerSprite.Render(renderer);
 		gameState.playerScoreText.Render(renderer);
+		for (int i = 0; i < gameState.playerSprite.lives; i++) {
+			SDL_RenderCopy(renderer, gameState.heartTexture, NULL, &NewRect(80 + (i * 150), Globals::TILE_ROWS * Globals::TILE_SIZE, 130, 130));
+		}
 
 		if (gameState.GetState() == TwoPlayer) {
 			gameState.playerTwoSprite.Render(renderer);
 			gameState.playerTwoScoreText.Render(renderer);
+
+			for (int i = 0; i < gameState.playerTwoSprite.lives; i++) {
+				SDL_RenderCopy(renderer, gameState.heartTexture, NULL, &NewRect((Globals::TILE_ROWS * Globals::TILE_SIZE / 2) + Globals::TILE_SIZE + (i * 150), Globals::TILE_ROWS * Globals::TILE_SIZE, 130, 130));
+			}
 		}
 	}
 
@@ -597,12 +622,14 @@ void Render() {
 
 void Reset() {
 	gameState.playerSprite.alive = true;
+	gameState.playerSprite.lives = Globals::PLAYER_LIVES;
 	gameState.playerSprite.score = 0;
 	gameState.playerSprite.tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
 	gameState.playerSprite.SetPositionFromTile(gameState);
 	gameState.playerSprite.moveDirection = Left;
 
 	gameState.playerTwoSprite.alive = true;
+	gameState.playerSprite.lives = Globals::PLAYER_LIVES;
 	gameState.playerTwoSprite.score = 0;
 	gameState.playerTwoSprite.tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
 	gameState.playerTwoSprite.SetPositionFromTile(gameState);
@@ -616,7 +643,7 @@ void Reset() {
 	}
 
 	for (int i = 0; i < Globals::TILE_COUNT; i++) {
-		if (gameState.tileGrid[i].GetState() == -1) {
+		if (gameState.tileGrid[i].GetState() == -1 || gameState.tileGrid[i].GetState() == -2) {
 			gameState.tileGrid[i].Reset();
 		}
 	}

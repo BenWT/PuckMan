@@ -22,8 +22,22 @@ void Player::Render(SDL_Renderer* renderer) {
             case Down: angle = 270; break;
         }
 
-        if (doAnimate) SDL_RenderCopyEx(renderer, texture, &animStates.at(currentAnim), &drawRect, angle, NULL, SDL_FLIP_NONE);
-        else SDL_RenderCopyEx(renderer, texture, (srcRect.w == -1) ? NULL : &srcRect, &drawRect, angle, NULL, SDL_FLIP_NONE);
+        if (deathTimer <= deathTime) {
+            SDL_Rect src;
+
+            if (doAnimate) {
+                src = animStates.at(currentAnim);
+                src.y += 200;
+                SDL_RenderCopyEx(renderer, texture, &src, &drawRect, angle, NULL, SDL_FLIP_NONE);
+            } else {
+                src = srcRect;
+                src.y += 200;
+                SDL_RenderCopyEx(renderer, texture, (srcRect.w == -1) ? NULL : &src, &drawRect, angle, NULL, SDL_FLIP_NONE);
+            }
+        } else {
+            if (doAnimate) SDL_RenderCopyEx(renderer, texture, &animStates.at(currentAnim), &drawRect, angle, NULL, SDL_FLIP_NONE);
+            else SDL_RenderCopyEx(renderer, texture, (srcRect.w == -1) ? NULL : &srcRect, &drawRect, angle, NULL, SDL_FLIP_NONE);
+        }
     }
 }
 
@@ -32,7 +46,7 @@ bool Player::CanMove(GameState& gameState, MoveDirection direction) {
 
     if (tileExists(i)) {
         int s = gameState.tileGrid[i].GetState();
-        if (s == 0 || s == -1) {
+        if (s == 0 || s == -1 || s == -2) {
             return true;
         }
     }
@@ -42,9 +56,9 @@ bool Player::CanMove(GameState& gameState, MoveDirection direction) {
 void Player::DoMove(GameState& gameState, double moveAmount, double deltaTime) {
     int i = getNextIndex(moveDirection);
 
-    if (tileExists(i)) {
+    if (tileExists(i) && alive) {
         int state = gameState.tileGrid[i].GetState();
-        if (state == 0 || state == -1) {
+        if (state == 0 || state == -1 || state == -2) {
             CycleAnims(deltaTime);
 
 			if (moveDirection == Up) {
@@ -68,6 +82,8 @@ void Player::DoMove(GameState& gameState, double moveAmount, double deltaTime) {
             Reset(moveAmount);
         }
     }
+
+    this->deathTimer += deltaTime;
 }
 
 void Player::Reset(double deltaTime) {
