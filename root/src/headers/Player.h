@@ -16,14 +16,17 @@ public:
 	int lives = Globals::PLAYER_LIVES;
 	double deathTime = 2.0;
 	double deathTimer = 2.0;
+	double pillTime = 5.0;
+	double pillTimer = 0.0;
 	bool alive = true;
 	bool canBiscuit = true;
+	bool hasPill = false;
 	int score = 0;
 	int tile;
 	double offsetX = 0;
 	double offsetY = 0;
 
-	bool CanMove(GameState&, MoveDirection);
+	bool CanMove(GameState&, MoveDirection, double);
 	void DoMove(GameState&, double, double);
 	void Reset(double);
 	void Render(SDL_Renderer* renderer); // overwrite Render

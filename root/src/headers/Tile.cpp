@@ -28,7 +28,7 @@ bool Tile::CheckPill() {
     return hasPill;
 }
 void Tile::EatPill() {
-
+    hasPill = false;
 }
 
 Vector2* Tile::GetPosition() {

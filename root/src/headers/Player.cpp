@@ -41,7 +41,7 @@ void Player::Render(SDL_Renderer* renderer) {
     }
 }
 
-bool Player::CanMove(GameState& gameState, MoveDirection direction) {
+bool Player::CanMove(GameState& gameState, MoveDirection direction, double deltaTime) {
     int i = getNextIndex(direction);
 
     if (tileExists(i)) {
@@ -82,8 +82,6 @@ void Player::DoMove(GameState& gameState, double moveAmount, double deltaTime) {
             Reset(moveAmount);
         }
     }
-
-    this->deathTimer += deltaTime;
 }
 
 void Player::Reset(double deltaTime) {
@@ -160,6 +158,11 @@ bool Player::clampOffset(GameState& gameState) {
             if (gameState.tileGrid[tile].CheckBiscuit()) {
                 gameState.tileGrid[tile].EatBiscuit();
                 score += Globals::BISCUIT_SCORE;
+            }
+            if (gameState.tileGrid[tile].CheckPill()) {
+                gameState.tileGrid[tile].EatPill();
+                this->pillTimer = 0.0;
+                this->hasPill = true;
             }
         }
         return true;

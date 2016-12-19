@@ -26,6 +26,7 @@ public:
 	SDL_Texture* biscuitTexture;
 	SDL_Texture* pillTexture;
 	SDL_Texture* heartTexture;
+	double pillAngle = 0.0;
 
 	// Mouse
 	bool mouseClicked = false;

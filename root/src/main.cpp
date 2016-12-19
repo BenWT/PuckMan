@@ -472,18 +472,32 @@ void Update(double &deltaTime) {
 	}
 
 	if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
+		gameState.pillAngle += deltaTime * 15;
+		if (gameState.pillAngle >= 360.0) gameState.pillAngle -= 360.0;
+
 		if (gameState.playerSprite.alive) {
-			if (p1Up && gameState.playerSprite.CanMove(gameState, Up)) gameState.playerSprite.moveDirection = Up;
-			if (p1Left && gameState.playerSprite.CanMove(gameState, Left)) gameState.playerSprite.moveDirection = Left;
-			if (p1Down && gameState.playerSprite.CanMove(gameState, Down)) gameState.playerSprite.moveDirection = Down;
-			if (p1Right && gameState.playerSprite.CanMove(gameState, Right)) gameState.playerSprite.moveDirection = Right;
+			if (gameState.GetState() == TwoPlayer) {
+				if (!gameState.playerTwoSprite.hasPill) {
+					if (p1Up && gameState.playerSprite.CanMove(gameState, Up, deltaTime)) gameState.playerSprite.moveDirection = Up;
+					if (p1Left && gameState.playerSprite.CanMove(gameState, Left, deltaTime)) gameState.playerSprite.moveDirection = Left;
+					if (p1Down && gameState.playerSprite.CanMove(gameState, Down, deltaTime)) gameState.playerSprite.moveDirection = Down;
+					if (p1Right && gameState.playerSprite.CanMove(gameState, Right, deltaTime)) gameState.playerSprite.moveDirection = Right;
+				}
+			} else {
+				if (p1Up && gameState.playerSprite.CanMove(gameState, Up, deltaTime)) gameState.playerSprite.moveDirection = Up;
+				if (p1Left && gameState.playerSprite.CanMove(gameState, Left, deltaTime)) gameState.playerSprite.moveDirection = Left;
+				if (p1Down && gameState.playerSprite.CanMove(gameState, Down, deltaTime)) gameState.playerSprite.moveDirection = Down;
+				if (p1Right && gameState.playerSprite.CanMove(gameState, Right, deltaTime)) gameState.playerSprite.moveDirection = Right;
+			}
 		}
 
-		if (gameState.playerTwoSprite.alive) {
-			if (p2Up && gameState.playerTwoSprite.CanMove(gameState, Up)) gameState.playerTwoSprite.moveDirection = Up;
-			if (p2Left && gameState.playerTwoSprite.CanMove(gameState, Left)) gameState.playerTwoSprite.moveDirection = Left;
-			if (p2Down && gameState.playerTwoSprite.CanMove(gameState, Down)) gameState.playerTwoSprite.moveDirection = Down;
-			if (p2Right && gameState.playerTwoSprite.CanMove(gameState, Right)) gameState.playerTwoSprite.moveDirection = Right;
+		if (gameState.playerTwoSprite.alive && gameState.GetState() == TwoPlayer) {
+			if (!gameState.playerSprite.hasPill) {
+				if (p2Up && gameState.playerTwoSprite.CanMove(gameState, Up, deltaTime)) gameState.playerTwoSprite.moveDirection = Up;
+				if (p2Left && gameState.playerTwoSprite.CanMove(gameState, Left, deltaTime)) gameState.playerTwoSprite.moveDirection = Left;
+				if (p2Down && gameState.playerTwoSprite.CanMove(gameState, Down, deltaTime)) gameState.playerTwoSprite.moveDirection = Down;
+				if (p2Right && gameState.playerTwoSprite.CanMove(gameState, Right, deltaTime)) gameState.playerTwoSprite.moveDirection = Right;
+			}
 		}
 
 		for (int i = 0; i < 4; i++) {
@@ -544,15 +558,26 @@ void Update(double &deltaTime) {
 
 		if (gameState.GetState() == OnePlayer) {
 			gameState.playerSprite.DoMove(gameState, p1Speed * max(leftJoyStickValue, rightJoyStickValue), deltaTime);
-
 			gameState.playerScoreText.ChangeText("Score: " + to_string(gameState.playerSprite.score));
+
+			gameState.playerSprite.deathTimer += deltaTime;
+		    if (gameState.playerSprite.hasPill) gameState.playerSprite.pillTimer += deltaTime;
+		    if (gameState.playerSprite.pillTimer >= gameState.playerSprite.pillTime) gameState.playerSprite.hasPill = false;
 		}
 		else if (gameState.GetState() == TwoPlayer) {
 			gameState.playerSprite.DoMove(gameState, p1Speed * leftJoyStickValue, deltaTime);
 			gameState.playerTwoSprite.DoMove(gameState, p2Speed * rightJoyStickValue, deltaTime);
 
+			gameState.playerSprite.deathTimer += deltaTime;
+		    if (gameState.playerSprite.hasPill) gameState.playerSprite.pillTimer += deltaTime;
+		    if (gameState.playerSprite.pillTimer >= gameState.playerSprite.pillTime) gameState.playerSprite.hasPill = false;
+
 			gameState.playerScoreText.ChangeText("Score: " + to_string(gameState.playerSprite.score));
 			gameState.playerTwoScoreText.ChangeText("Score: " + to_string(gameState.playerTwoSprite.score));
+
+			gameState.playerTwoSprite.deathTimer += deltaTime;
+		    if (gameState.playerTwoSprite.hasPill) gameState.playerTwoSprite.pillTimer += deltaTime;
+		    if (gameState.playerTwoSprite.pillTimer >= gameState.playerTwoSprite.pillTime) gameState.playerTwoSprite.hasPill = false;
 		}
 
 		for (int i = 0; i < 4; i++) {
@@ -591,7 +616,7 @@ void Render() {
 			}
 			if (gameState.tileGrid[i].CheckPill()) {
 				SDL_Rect pillRect = { (int)(gameState.tileGrid[i].GetPositionX()), (int)(gameState.tileGrid[i].GetPositionY()), 100, 100 };
-				SDL_RenderCopyEx(renderer, gameState.pillTexture, NULL, &pillRect, 270, NULL, SDL_FLIP_NONE);
+				SDL_RenderCopyEx(renderer, gameState.pillTexture, NULL, &pillRect, gameState.pillAngle, NULL, SDL_FLIP_NONE);
 			}
 		}
 

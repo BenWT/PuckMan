@@ -13,51 +13,51 @@ void Enemy::PathFind(GameState& gameState, double deltaTime) {
     if (timer >= 0.15) {
         if (moveDirection == Left) {
             if (currentToggle >= toggle) {
-                if (CanMove(gameState, Up)) { currentToggle++; timer = 0; moveDirection = Up; }
-                else if (CanMove(gameState, Down)) { currentToggle++; timer = 0; moveDirection = Down; }
-                else if (!CanMove(gameState, Left)) { currentToggle++; timer = 0; moveDirection = Right; }
+                if (CanMove(gameState, Up, deltaTime)) { currentToggle++; timer = 0; moveDirection = Up; }
+                else if (CanMove(gameState, Down, deltaTime)) { currentToggle++; timer = 0; moveDirection = Down; }
+                else if (!CanMove(gameState, Left, deltaTime)) { currentToggle++; timer = 0; moveDirection = Right; }
                 currentToggle = 0;
                 toggle = rand() % 10;
             } else {
-                if (CanMove(gameState, Down)) { currentToggle++; timer = 0; moveDirection = Down; }
-                else if (CanMove(gameState, Up)) { currentToggle++; timer = 0; moveDirection = Up; }
-                else if (!CanMove(gameState, Left)) { currentToggle++; timer = 0; moveDirection = Right; }
+                if (CanMove(gameState, Down, deltaTime)) { currentToggle++; timer = 0; moveDirection = Down; }
+                else if (CanMove(gameState, Up, deltaTime)) { currentToggle++; timer = 0; moveDirection = Up; }
+                else if (!CanMove(gameState, Left, deltaTime)) { currentToggle++; timer = 0; moveDirection = Right; }
             }
         } else if (moveDirection == Right) {
             if (currentToggle >= toggle) {
-                if (CanMove(gameState, Down)) { currentToggle++; timer = 0; moveDirection = Down; }
-                else if (CanMove(gameState, Up)) { currentToggle++; timer = 0; moveDirection = Up; }
-                else if (!CanMove(gameState, Right)) { currentToggle++; timer = 0; moveDirection = Left; }
+                if (CanMove(gameState, Down, deltaTime)) { currentToggle++; timer = 0; moveDirection = Down; }
+                else if (CanMove(gameState, Up, deltaTime)) { currentToggle++; timer = 0; moveDirection = Up; }
+                else if (!CanMove(gameState, Right, deltaTime)) { currentToggle++; timer = 0; moveDirection = Left; }
                 currentToggle = 0;
                 toggle = rand() % 10;
             } else {
-                if (CanMove(gameState, Up)) { currentToggle++; timer = 0; moveDirection = Up; }
-                else if (CanMove(gameState, Down)) { currentToggle++; timer = 0; moveDirection = Down; }
-                else if (!CanMove(gameState, Right)) { currentToggle++; timer = 0; moveDirection = Left; }
+                if (CanMove(gameState, Up, deltaTime)) { currentToggle++; timer = 0; moveDirection = Up; }
+                else if (CanMove(gameState, Down, deltaTime)) { currentToggle++; timer = 0; moveDirection = Down; }
+                else if (!CanMove(gameState, Right, deltaTime)) { currentToggle++; timer = 0; moveDirection = Left; }
             }
         } else if (moveDirection == Up) {
             if (currentToggle >= toggle) {
-                if (CanMove(gameState, Left)) { currentToggle++; timer = 0; moveDirection = Left; }
-                else if (CanMove(gameState, Right)) { currentToggle++; timer = 0; moveDirection = Right; }
-                else if (!CanMove(gameState, Up)) { currentToggle++; timer = 0; moveDirection = Down; }
+                if (CanMove(gameState, Left, deltaTime)) { currentToggle++; timer = 0; moveDirection = Left; }
+                else if (CanMove(gameState, Right, deltaTime)) { currentToggle++; timer = 0; moveDirection = Right; }
+                else if (!CanMove(gameState, Up, deltaTime)) { currentToggle++; timer = 0; moveDirection = Down; }
                 currentToggle = 0;
                 toggle = rand() % 10;
             } else {
-                if (CanMove(gameState, Right)) { currentToggle++; timer = 0; moveDirection = Right; }
-                else if (CanMove(gameState, Left)) { currentToggle++; timer = 0; moveDirection = Left; }
-                else if (!CanMove(gameState, Up)) { currentToggle++; timer = 0; moveDirection = Down; }
+                if (CanMove(gameState, Right, deltaTime)) { currentToggle++; timer = 0; moveDirection = Right; }
+                else if (CanMove(gameState, Left, deltaTime)) { currentToggle++; timer = 0; moveDirection = Left; }
+                else if (!CanMove(gameState, Up, deltaTime)) { currentToggle++; timer = 0; moveDirection = Down; }
             }
         } else if (moveDirection == Down) {
             if (currentToggle >= toggle) {
-                if (CanMove(gameState, Right)) { currentToggle++; timer = 0; moveDirection = Right; }
-                else if (CanMove(gameState, Left)) { currentToggle++; timer = 0; moveDirection = Left; }
-                else if (!CanMove(gameState, Down)) { currentToggle++; timer = 0; moveDirection = Up; }
+                if (CanMove(gameState, Right, deltaTime)) { currentToggle++; timer = 0; moveDirection = Right; }
+                else if (CanMove(gameState, Left, deltaTime)) { currentToggle++; timer = 0; moveDirection = Left; }
+                else if (!CanMove(gameState, Down, deltaTime)) { currentToggle++; timer = 0; moveDirection = Up; }
                 currentToggle = 0;
                 toggle = rand() % 10;
             } else {
-                if (CanMove(gameState, Left)) { currentToggle++; timer = 0; moveDirection = Left; }
-                else if (CanMove(gameState, Right)) { currentToggle++; timer = 0; moveDirection = Right; }
-                else if (!CanMove(gameState, Down)) { currentToggle++; timer = 0; moveDirection = Up; }
+                if (CanMove(gameState, Left, deltaTime)) { currentToggle++; timer = 0; moveDirection = Left; }
+                else if (CanMove(gameState, Right, deltaTime)) { currentToggle++; timer = 0; moveDirection = Right; }
+                else if (!CanMove(gameState, Down, deltaTime)) { currentToggle++; timer = 0; moveDirection = Up; }
             }
         }
     }
