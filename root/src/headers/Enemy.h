@@ -16,7 +16,7 @@ public:
     double timer = 1;
 
     void Kill(GameState&);
-    void PathFind(GameState&, double);
+    void Roam(GameState&, double);
     MoveDirection TurnLeft();
     MoveDirection TurnRight();
     MoveDirection TurnAround();

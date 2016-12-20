@@ -44,3 +44,19 @@ GameState::GameState() {
         }
     }
 }
+
+void GameState::PlayClick() {
+    Mix_PlayChannel(-1, clickSound, 0);
+}
+void GameState::PlayBiscuit() {
+    Mix_PlayChannel(-1, biscuitSound, 0);
+}
+void GameState::PlayPill() {
+    Mix_PlayChannel(-1, pillSound, 0);
+}
+void GameState::PlayHit() {
+    Mix_PlayChannel(-1, hitSound, 0);
+}
+void GameState::PlayGhostDeath() {
+    Mix_PlayChannel(-1, ghostDeathSound, 0);
+}

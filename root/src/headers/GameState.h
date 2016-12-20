@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "SDL_mixer.h"
 #include <array>
 #include "Globals.h"
 #include "Sprite.h"
@@ -28,8 +29,23 @@ public:
 	SDL_Texture* heartTexture;
 	double pillAngle = 0.0;
 
+	// Audio
+	Mix_Music* menuMusic = NULL;
+	Mix_Music* gameMusic = NULL;
+	Mix_Chunk* clickSound = NULL;
+	Mix_Chunk* biscuitSound = NULL;
+	Mix_Chunk* pillSound = NULL;
+	Mix_Chunk* hitSound = NULL;
+	Mix_Chunk* ghostDeathSound = NULL;
+	void PlayClick();
+	void PlayBiscuit();
+	void PlayPill();
+	void PlayHit();
+	void PlayGhostDeath();
+
 	// Options
 	bool useController = false;
+	double musicVolume = MIX_MAX_VOLUME / 5;
 
 	// Mouse
 	bool mouseClicked = false;

@@ -9,8 +9,8 @@
 #include <string>
 #include <cmath>
 #include "SDL.h"
-#include "SDL_gamecontroller.h"
 #include "SDL_image.h"
+#include "SDL_mixer.h"
 #include "headers/GameState.h"
 #include "headers/Tile.h"
 #include "headers/Vector2.h"
@@ -24,6 +24,7 @@ using namespace chrono;
 
 // Methods
 void InitialiseSprites();
+void LoadAudio();
 void ProcessInput();
 void Update(double&);
 void Render();
@@ -67,10 +68,12 @@ bool running;
 void onePlayerCallback() {
 	Reset();
 	gameState.SetState(OnePlayer);
+	Mix_HaltMusic();
 }
 void twoPlayerCallback() {
 	Reset();
 	gameState.SetState(TwoPlayer);
+	Mix_HaltMusic();
 }
 void optionsCallback() {
 	cout << "clicked options" << endl;
@@ -82,10 +85,12 @@ void quitCallback() {
 void retryOnePlayerCallback() {
 	Reset();
 	gameState.SetState(OnePlayer);
+	Mix_HaltMusic();
 }
 void retryTwoPlayerCallback() {
 	Reset();
 	gameState.SetState(TwoPlayer);
+	Mix_HaltMusic();
 }
 void backToMenuCallback() {
 	gameState.SetState(MainMenu);
@@ -98,7 +103,7 @@ int main(int argc, char *argv[]) {
 	cout << basePath << endl;
 
 	// Initialise SDL
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) != 0) {
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
 		SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL failed to initialise. \n");
 		return 1;
 	}
@@ -112,6 +117,12 @@ int main(int argc, char *argv[]) {
 	}
 	SDL_Log("SDL_image initialised successfully. \n");
 
+	if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 1024) == -1) {
+		SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL_mixer failed to initialise. \n");
+		return 1;
+	}
+	SDL_Log("SDL_mixer initialised successfully. \n");
+
 	// Create Window
 	SDL_CreateWindowAndRenderer(Globals::ACTUAL_SCREEN_WIDTH, Globals::ACTUAL_SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE, &window, &renderer);
 	if (window == NULL || renderer == NULL) {
@@ -119,6 +130,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 	SDL_RenderSetLogicalSize(renderer, Globals::SCREEN_WIDTH, Globals::SCREEN_HEIGHT);
+	SDL_SetWindowTitle(window, "PuckMan - Ben Townshend - 13480634 - CGP2011M");
 
 	// Create Gamepad
 	for (int i = 0; i < SDL_NumJoysticks(); i++) {
@@ -132,6 +144,7 @@ int main(int argc, char *argv[]) {
 
 	// Create Sprites
 	InitialiseSprites();
+	LoadAudio();
 
 	// Game Loop
 	running = true;
@@ -162,14 +175,14 @@ int main(int argc, char *argv[]) {
 
 void InitialiseSprites() {
 	// Surfaces
-	SDL_Surface* playerSurface = IMG_Load(AddBase("assets/puckman.png").c_str());
-	SDL_Surface* enemySurface = IMG_Load(AddBase("assets/ghost.png").c_str());
-	SDL_Surface* tileSurface = IMG_Load(AddBase("assets/tiles.png").c_str());
-	SDL_Surface* biscuitSurface = SDL_LoadBMP(AddBase("assets/biscuit.bmp").c_str());
-	SDL_Surface* pillSurface = IMG_Load(AddBase("assets/pill.png").c_str());
-	SDL_Surface* heartSurface = IMG_Load(AddBase("assets/heart.png").c_str());
-	SDL_Surface* fontSurface = IMG_Load(AddBase("assets/fonts.png").c_str());
-	SDL_Surface* fontSelectedSurface = IMG_Load(AddBase("assets/fontsSelected.png").c_str());
+	SDL_Surface* playerSurface = IMG_Load(AddBase("assets/textures/puckman.png").c_str());
+	SDL_Surface* enemySurface = IMG_Load(AddBase("assets/textures/ghost.png").c_str());
+	SDL_Surface* tileSurface = IMG_Load(AddBase("assets/textures/tiles.png").c_str());
+	SDL_Surface* biscuitSurface = SDL_LoadBMP(AddBase("assets/textures/biscuit.bmp").c_str());
+	SDL_Surface* pillSurface = IMG_Load(AddBase("assets/textures/pill.png").c_str());
+	SDL_Surface* heartSurface = IMG_Load(AddBase("assets/textures/heart.png").c_str());
+	SDL_Surface* fontSurface = IMG_Load(AddBase("assets/textures/fonts.png").c_str());
+	SDL_Surface* fontSelectedSurface = IMG_Load(AddBase("assets/textures/fontsSelected.png").c_str());
 
 	// Textures
 	SDL_Texture* playerTexture = SDL_CreateTextureFromSurface(renderer, playerSurface);
@@ -283,6 +296,26 @@ void InitialiseSprites() {
 	}
 	gameState.playerTwoSprite = *p2;
 	delete p2;
+}
+
+void LoadAudio() {
+	gameState.menuMusic = Mix_LoadMUS(AddBase("assets/audio/Puckman_Menu_Theme.mp3").c_str());
+	gameState.gameMusic = Mix_LoadMUS(AddBase("assets/audio/Puckman_Game_Theme.mp3").c_str());
+	gameState.clickSound = Mix_LoadWAV(AddBase("assets/audio/Menu_Click.wav").c_str());
+	gameState.biscuitSound = Mix_LoadWAV(AddBase("assets/audio/Pickup_Biscuit.wav").c_str());
+	gameState.pillSound = Mix_LoadWAV(AddBase("assets/audio/Pickup_Pill.wav").c_str());
+	gameState.hitSound = Mix_LoadWAV(AddBase("assets/audio/Hit.wav").c_str());
+	gameState.ghostDeathSound = Mix_Load(AddBase("assets/audio/Ghost_Death.wav").c_str());
+
+	if (gameState.menuMusic == NULL ||
+		gameState.gameMusic == NULL ||
+		gameState.clickSound == NULL ||
+		gameState.biscuitSound == NULL ||
+		gameState.pillSound == NULL ||
+		gameState.hitSound == NULL ||
+		gameState.ghostDeathSound == NULL) {
+		cout << "Music couldnt be loaded" << endl;
+	}
 }
 
 void ProcessInput() {
@@ -412,6 +445,7 @@ void Update(double &deltaTime) {
 				if (it->canClick) {
 					if (it->CheckBounds(gameState.mouseX, gameState.mouseY)) {
 						it->DoClick();
+						gameState.PlayClick();
 					}
 				}
 			}
@@ -449,7 +483,10 @@ void Update(double &deltaTime) {
 						it->selected = true;
 
 						if (gameState.enter || gameState.aGamePad) {
-							if (it->canClick) it->DoClick();
+							if (it->canClick) {
+								it->DoClick();
+								gameState.PlayClick();
+							}
 						}
 					}
 				}
@@ -510,10 +547,12 @@ void Update(double &deltaTime) {
 			if (gameState.playerSprite.tile == gameState.enemySprites[i].tile) {
 				if (gameState.playerSprite.hasPill) {
 					gameState.enemySprites[i].Kill(gameState);
+					gameState.PlayGhostDeath();
 				} else {
 					if (gameState.playerSprite.deathTimer >= gameState.playerSprite.deathTime) {
 						gameState.playerSprite.lives--;
 						gameState.playerSprite.deathTimer = 0;
+						gameState.PlayHit();
 
 						if (gameState.playerSprite.lives <= 0) {
 							gameState.playerSprite.alive = false;
@@ -525,10 +564,12 @@ void Update(double &deltaTime) {
 				if (gameState.GetState() == TwoPlayer) {
 					if (gameState.playerTwoSprite.hasPill) {
 						gameState.enemySprites[i].Kill(gameState);
+						gameState.PlayGhostDeath();
 					} else {
 						if (gameState.playerTwoSprite.deathTimer >= gameState.playerTwoSprite.deathTime) {
 							gameState.playerTwoSprite.lives--;
 							gameState.playerTwoSprite.deathTimer = 0;
+							gameState.PlayHit();
 
 							if (gameState.playerTwoSprite.lives <= 0) {
 								gameState.playerTwoSprite.alive = false;
@@ -544,22 +585,26 @@ void Update(double &deltaTime) {
 				gameState.endGameOneText.at(0).ChangeText("Winner!");
 				gameState.endGameOneText.at(0).CentreHorizontal();
 				gameState.SetState(EndGameOnePlayer);
+				Mix_HaltMusic();
 			}
 			if (!gameState.playerSprite.alive) {
 				gameState.endGameOneText.at(0).ChangeText("Game Over!");
 				gameState.endGameOneText.at(0).CentreHorizontal();
 				gameState.SetState(EndGameOnePlayer);
+				Mix_HaltMusic();
 			}
 		} else if (gameState.GetState() == TwoPlayer) {
 			if (gameState.playerSprite.score + gameState.playerTwoSprite.score >= Globals::TOTAL_SCORE) {
 				gameState.endGameTwoText.at(0).ChangeText("Winner!");
 				gameState.endGameTwoText.at(0).CentreHorizontal();
 				gameState.SetState(EndGameTwoPlayer);
+				Mix_HaltMusic();
 			}
 			if (!gameState.playerSprite.alive && !gameState.playerTwoSprite.alive) {
 				gameState.endGameTwoText.at(0).ChangeText("Game Over!");
 				gameState.endGameTwoText.at(0).CentreHorizontal();
 				gameState.SetState(EndGameTwoPlayer);
+				Mix_HaltMusic();
 			}
 		}
 
@@ -595,8 +640,15 @@ void Update(double &deltaTime) {
 		}
 
 		for (int i = 0; i < 4; i++) {
-			gameState.enemySprites[i].PathFind(gameState, deltaTime);
+			gameState.enemySprites[i].Roam(gameState, deltaTime);
 		}
+	}
+
+	if (gameState.GetState() == MainMenu || gameState.GetState() == EndGameOnePlayer || gameState.GetState() == EndGameTwoPlayer) {
+		Mix_VolumeMusic(gameState.musicVolume);
+		if (!Mix_PlayingMusic()) Mix_PlayMusic(gameState.menuMusic, -1);
+	} else if(gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
+		if (!Mix_PlayingMusic()) Mix_PlayMusic(gameState.gameMusic, -1);
 	}
 }
 

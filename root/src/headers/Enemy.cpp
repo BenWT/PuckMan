@@ -16,16 +16,34 @@ void Enemy::Kill(GameState& gameState) {
 }
 
 MoveDirection Enemy::TurnLeft() {
-    return moveDirection;
+    switch (moveDirection) {
+        case Left: return Down; break;
+        case Right: return Up; break;
+        case Up: return Left; break;
+        case Down: return Right; break;
+        default: return moveDirection; break;
+    }
 }
 MoveDirection Enemy::TurnRight() {
-    return moveDirection;
+    switch (moveDirection) {
+        case Left: return Up; break;
+        case Right: return Down; break;
+        case Up: return Right; break;
+        case Down: return Left; break;
+        default: return moveDirection; break;
+    }
 }
 MoveDirection Enemy::TurnAround() {
-    return moveDirection;
+    switch (moveDirection) {
+        case Left: return Right; break;
+        case Right: return Left; break;
+        case Up: return Down; break;
+        case Down: return Up; break;
+        default: return moveDirection; break;
+    }
 }
 
-void Enemy::PathFind(GameState& gameState, double deltaTime) {
+void Enemy::Roam(GameState& gameState, double deltaTime) {
     if (timer >= 0.15) {
         bool forward = CanMove(gameState, moveDirection, deltaTime);
         bool left = CanMove(gameState, TurnLeft(), deltaTime);
@@ -34,30 +52,46 @@ void Enemy::PathFind(GameState& gameState, double deltaTime) {
 
         if (forward) {
             if (left) {
-                if (right) {
-                    // left + right + forward
-                } else {
-                    // left + forward
+                if (right) { // left + right + forward
+                    if (choice % 3 == 0) moveDirection = TurnLeft();
+                    else if (choice % 3 == 1) moveDirection = TurnRight();
+                    else if (choice % 3 == 2) // leave move direction
+
+                    timer = 0;
+                } else { // left + forward
+                    if (choice % 2 == 0) moveDirection = TurnLeft();
+                    else if (choice % 2 == 1) // leave move direction
+
+                    timer = 0;
                 }
             } else {
-                if (right) {
-                    // right + forward
-                } else {
-                    // forward
+                if (right) { // right + forward
+                    if (choice % 2 == 0) moveDirection = TurnRight();
+                    else if (choice % 2 == 1) // leave move direction
+
+                    timer = 0;
+                } else { // forward
+                    timer = 0;
                 }
             }
         } else {
             if (left) {
-                if (right) {
-                    // left + right
-                } else {
-                    // right
+                if (right) { // left + right
+                    if (choice % 2 == 0) moveDirection = TurnLeft();
+                    else if (choice % 2 == 1) moveDirection = TurnRight();
+
+                    timer = 0;
+                } else { // left
+                    moveDirection = TurnLeft();
+                    timer = 0;
                 }
             } else {
-                if (right) {
-                    // right
-                } else {
-                    // turn around
+                if (right) { // right
+                    moveDirection = TurnRight();
+                    timer = 0;
+                } else { // turn around
+                    moveDirection = TurnAround();
+                    timer = 0;
                 }
             }
         }

@@ -12,7 +12,7 @@ public:
     const static int TILE_ROWS = 37;
     const static int TILE_COUNT = TILE_ROWS * TILE_ROWS;
     const static int TILE_SIZE = 50;
-    const static int TOTAL_SCORE = 14200;
+    const static int TOTAL_SCORE = 13600;
     const static int SCORE_REGION = 100;
     const static int ACTUAL_SCREEN_WIDTH = 800;
     const static int ACTUAL_SCREEN_HEIGHT = 600;

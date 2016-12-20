@@ -56,6 +56,8 @@ bool Player::CanMove(GameState& gameState, MoveDirection direction, double delta
 void Player::DoMove(GameState& gameState, double moveAmount, double deltaTime) {
     int i = getNextIndex(moveDirection);
 
+    if (hasPill) moveAmount *= 1.5;
+
     if (tileExists(i) && alive) {
         int state = gameState.tileGrid[i].GetState();
         if (state == 0 || state == -1 || state == -2) {
@@ -157,10 +159,12 @@ bool Player::clampOffset(GameState& gameState) {
         if (canBiscuit) {
             if (gameState.tileGrid[tile].CheckBiscuit()) {
                 gameState.tileGrid[tile].EatBiscuit();
+                gameState.PlayBiscuit();
                 score += Globals::BISCUIT_SCORE;
             }
             if (gameState.tileGrid[tile].CheckPill()) {
                 gameState.tileGrid[tile].EatPill();
+                gameState.PlayPill();
                 this->pillTimer = 0.0;
                 this->hasPill = true;
             }
