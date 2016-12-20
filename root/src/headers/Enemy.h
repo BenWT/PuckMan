@@ -17,6 +17,9 @@ public:
 
     void Kill(GameState&);
     void PathFind(GameState&, double);
+    MoveDirection TurnLeft();
+    MoveDirection TurnRight();
+    MoveDirection TurnAround();
     void Render(SDL_Renderer* renderer, bool); // overwrite Render
     using Player::Player;
 private:

@@ -41,7 +41,7 @@ string basePath;
 string GetPathFromFullPath(const string& str) {
 	size_t found = str.find_last_of("/\\");
 	if (found == numeric_limits<size_t>::max()) return "";
-	else return (str.substr(2, found) + "\\");
+	else return (str.substr(0, found) + "\\");
 }
 string GetfilenameFromFullPath(const string& str) {
 	size_t found = str.find_last_of("/\\");
@@ -49,10 +49,8 @@ string GetfilenameFromFullPath(const string& str) {
 	else return (str.substr(found + 1));
 }
 string AddBase(string path) {
-	#ifdef _WIN32
+	#ifdef _WIN32 // Windows reverses X and Y axis of right joystick
 		return basePath + path;
-	#elif __APPLE__
-		return path;
 	#else
 		return path;
 	#endif
@@ -97,6 +95,7 @@ int main(int argc, char *argv[]) {
 	// Get Base Path
 	basePath = argv[0];
 	basePath = GetPathFromFullPath(basePath).c_str();
+	cout << basePath << endl;
 
 	// Initialise SDL
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) != 0) {

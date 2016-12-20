@@ -15,7 +15,58 @@ void Enemy::Kill(GameState& gameState) {
     this->moveDirection = Up;
 }
 
+MoveDirection Enemy::TurnLeft() {
+    return moveDirection;
+}
+MoveDirection Enemy::TurnRight() {
+    return moveDirection;
+}
+MoveDirection Enemy::TurnAround() {
+    return moveDirection;
+}
+
 void Enemy::PathFind(GameState& gameState, double deltaTime) {
+    if (timer >= 0.15) {
+        bool forward = CanMove(gameState, moveDirection, deltaTime);
+        bool left = CanMove(gameState, TurnLeft(), deltaTime);
+        bool right = CanMove(gameState, TurnRight(), deltaTime);
+        int choice = rand();
+
+        if (forward) {
+            if (left) {
+                if (right) {
+                    // left + right + forward
+                } else {
+                    // left + forward
+                }
+            } else {
+                if (right) {
+                    // right + forward
+                } else {
+                    // forward
+                }
+            }
+        } else {
+            if (left) {
+                if (right) {
+                    // left + right
+                } else {
+                    // right
+                }
+            } else {
+                if (right) {
+                    // right
+                } else {
+                    // turn around
+                }
+            }
+        }
+    }
+
+
+    DoMove(gameState, deltaTime * Globals::PLAYER_SPEED, deltaTime);
+    timer += deltaTime;
+
     /* if (timer >= 0.15) {
         if (moveDirection == Left) {
             if (currentToggle >= toggle) {
