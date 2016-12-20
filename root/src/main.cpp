@@ -41,7 +41,7 @@ string basePath;
 string GetPathFromFullPath(const string& str) {
 	size_t found = str.find_last_of("/\\");
 	if (found == numeric_limits<size_t>::max()) return "";
-	else return (str.substr(0, found) + "\\");
+	else return (str.substr(2, found) + "\\");
 }
 string GetfilenameFromFullPath(const string& str) {
 	size_t found = str.find_last_of("/\\");
@@ -49,7 +49,13 @@ string GetfilenameFromFullPath(const string& str) {
 	else return (str.substr(found + 1));
 }
 string AddBase(string path) {
-	return basePath + path;
+	#ifdef _WIN32
+		return basePath + path;
+	#elif __APPLE__
+		return path;
+	#else
+		return path;
+	#endif
 }
 
 // Global Variables
@@ -157,7 +163,6 @@ int main(int argc, char *argv[]) {
 
 void InitialiseSprites() {
 	// Surfaces
-	cout << AddBase("123").c_str() << endl;
 	SDL_Surface* playerSurface = IMG_Load(AddBase("assets/puckman.png").c_str());
 	SDL_Surface* enemySurface = IMG_Load(AddBase("assets/ghost.png").c_str());
 	SDL_Surface* tileSurface = IMG_Load(AddBase("assets/tiles.png").c_str());
@@ -638,7 +643,8 @@ void Render() {
 		gameState.playerSprite.Render(renderer);
 		gameState.playerScoreText.Render(renderer);
 		for (int i = 0; i < gameState.playerSprite.lives; i++) {
-			SDL_RenderCopy(renderer, gameState.heartTexture, NULL, &NewRect((Globals::TILE_SIZE * 5) + 80 + (i * 75), (Globals::TILE_ROWS - 1) * Globals::TILE_SIZE, 65, 65));
+			SDL_Rect dest = NewRect((Globals::TILE_SIZE * 5) + 80 + (i * 75), (Globals::TILE_ROWS - 1) * Globals::TILE_SIZE, 65, 65);
+			SDL_RenderCopy(renderer, gameState.heartTexture, NULL, &dest);
 		}
 
 		if (gameState.GetState() == TwoPlayer) {
@@ -646,7 +652,8 @@ void Render() {
 			gameState.playerTwoScoreText.Render(renderer);
 
 			for (int i = 0; i < gameState.playerTwoSprite.lives; i++) {
-				SDL_RenderCopy(renderer, gameState.heartTexture, NULL, &NewRect((Globals::TILE_ROWS * Globals::TILE_SIZE / 2) + Globals::TILE_SIZE + (i * 75), (Globals::TILE_ROWS - 1) * Globals::TILE_SIZE, 65, 65));
+				SDL_Rect dest = NewRect((Globals::TILE_ROWS * Globals::TILE_SIZE / 2) + Globals::TILE_SIZE + (i * 75), (Globals::TILE_ROWS - 1) * Globals::TILE_SIZE, 65, 65);
+				SDL_RenderCopy(renderer, gameState.heartTexture, NULL, &dest);
 			}
 		}
 	}
