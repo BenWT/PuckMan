@@ -12,6 +12,7 @@
 void Enemy::Kill(GameState& gameState) {
     this->tile = Globals::ENEMY_START_X[0] + (Globals::ENEMY_START_Y[0] * Globals::TILE_ROWS);
     this->SetPositionFromTile(gameState);
+    this->moveDirection = Up;
 }
 
 void Enemy::PathFind(GameState& gameState, double deltaTime) {

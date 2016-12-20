@@ -218,8 +218,8 @@ void InitialiseSprites() {
 	delete gameOver;
 
 	// Score Text
-	FontSprite* playerOneScoreText = new FontSprite("Score: ", font, fontS, 80,  Globals::SCREEN_HEIGHT - (Globals::FONT_HEIGHT * 10), 10, false, false);
-	FontSprite* playerTwoScoreText = new FontSprite("Score: ", font, fontS, (Globals::TILE_ROWS * Globals::TILE_SIZE / 2) + Globals::TILE_SIZE, Globals::SCREEN_HEIGHT - (Globals::FONT_HEIGHT * 10), 10, false, false);
+	FontSprite* playerOneScoreText = new FontSprite("Score: ", font, fontS, (Globals::TILE_SIZE * 5) + 80,  Globals::SCREEN_HEIGHT - (Globals::FONT_HEIGHT * 5), 5, false, false);
+	FontSprite* playerTwoScoreText = new FontSprite("Score: ", font, fontS, (Globals::TILE_ROWS * Globals::TILE_SIZE / 2) + Globals::TILE_SIZE, Globals::SCREEN_HEIGHT - (Globals::FONT_HEIGHT * 5), 5, false, false);
 	gameState.playerScoreText = *playerOneScoreText;
 	gameState.playerTwoScoreText = *playerTwoScoreText;
 	delete playerOneScoreText;
@@ -638,7 +638,7 @@ void Render() {
 		gameState.playerSprite.Render(renderer);
 		gameState.playerScoreText.Render(renderer);
 		for (int i = 0; i < gameState.playerSprite.lives; i++) {
-			SDL_RenderCopy(renderer, gameState.heartTexture, NULL, &NewRect(80 + (i * 150), Globals::TILE_ROWS * Globals::TILE_SIZE, 130, 130));
+			SDL_RenderCopy(renderer, gameState.heartTexture, NULL, &NewRect((Globals::TILE_SIZE * 5) + 80 + (i * 75), (Globals::TILE_ROWS - 1) * Globals::TILE_SIZE, 65, 65));
 		}
 
 		if (gameState.GetState() == TwoPlayer) {
@@ -646,7 +646,7 @@ void Render() {
 			gameState.playerTwoScoreText.Render(renderer);
 
 			for (int i = 0; i < gameState.playerTwoSprite.lives; i++) {
-				SDL_RenderCopy(renderer, gameState.heartTexture, NULL, &NewRect((Globals::TILE_ROWS * Globals::TILE_SIZE / 2) + Globals::TILE_SIZE + (i * 150), Globals::TILE_ROWS * Globals::TILE_SIZE, 130, 130));
+				SDL_RenderCopy(renderer, gameState.heartTexture, NULL, &NewRect((Globals::TILE_ROWS * Globals::TILE_SIZE / 2) + Globals::TILE_SIZE + (i * 75), (Globals::TILE_ROWS - 1) * Globals::TILE_SIZE, 65, 65));
 			}
 		}
 	}
