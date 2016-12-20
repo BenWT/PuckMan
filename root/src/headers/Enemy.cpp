@@ -9,8 +9,13 @@
 #include "Tile.h"
 #include "Enemy.h"
 
+void Enemy::Kill(GameState& gameState) {
+    this->tile = Globals::ENEMY_START_X[0] + (Globals::ENEMY_START_Y[0] * Globals::TILE_ROWS);
+    this->SetPositionFromTile(gameState);
+}
+
 void Enemy::PathFind(GameState& gameState, double deltaTime) {
-    if (timer >= 0.15) {
+    /* if (timer >= 0.15) {
         if (moveDirection == Left) {
             if (currentToggle >= toggle) {
                 if (CanMove(gameState, Up, deltaTime)) { currentToggle++; timer = 0; moveDirection = Up; }
@@ -63,14 +68,25 @@ void Enemy::PathFind(GameState& gameState, double deltaTime) {
     }
 
     DoMove(gameState, deltaTime * Globals::PLAYER_SPEED, deltaTime);
-    timer += deltaTime;
+    timer += deltaTime; */
 }
 
-void Enemy::Render(SDL_Renderer* renderer) {
+void Enemy::Render(SDL_Renderer* renderer, bool hasPill) {
     SDL_Rect drawRect = destRect;
     drawRect.x += (int)offsetX;
     drawRect.y += (int)offsetY;
 
-    if (doAnimate) SDL_RenderCopy(renderer,texture, &animStates.at(currentAnim), &drawRect);
-    else SDL_RenderCopy(renderer, texture, (srcRect.w == -1) ? NULL : &srcRect, &drawRect);
+    if (hasPill) {
+        if (doAnimate)  {
+            SDL_Rect src;
+            src = animStates.at(currentAnim);
+            src.y = 400;
+
+            SDL_RenderCopy(renderer,texture, &src, &drawRect);
+        }
+        else SDL_RenderCopy(renderer, texture, (srcRect.w == -1) ? NULL : &srcRect, &drawRect);
+    } else {
+        if (doAnimate) SDL_RenderCopy(renderer,texture, &animStates.at(currentAnim), &drawRect);
+        else SDL_RenderCopy(renderer, texture, (srcRect.w == -1) ? NULL : &srcRect, &drawRect);
+    }
 }

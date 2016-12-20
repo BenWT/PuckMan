@@ -28,6 +28,9 @@ public:
 	SDL_Texture* heartTexture;
 	double pillAngle = 0.0;
 
+	// Options
+	bool useController = false;
+
 	// Mouse
 	bool mouseClicked = false;
 	int mouseX = 0;

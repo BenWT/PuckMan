@@ -15,8 +15,9 @@ public:
 
     double timer = 1;
 
+    void Kill(GameState&);
     void PathFind(GameState&, double);
-    void Render(SDL_Renderer* renderer); // overwrite Render
+    void Render(SDL_Renderer* renderer, bool); // overwrite Render
     using Player::Player;
 private:
     int toggle = rand() % 10;

@@ -178,7 +178,7 @@ void InitialiseSprites() {
 	SDL_Texture* fontS = SDL_CreateTextureFromSurface(renderer, fontSelectedSurface);
 
 	// Main Menu
-	int mainMenuScale = 15;
+	int mainMenuScale = 10;
 	FontSprite* title = new FontSprite("PuckMan!", font, fontS, 0, 0, mainMenuScale * 2, false, false);
 	FontSprite* onePlayer = new FontSprite("One Player", font, fontS, 0, mainMenuScale * Globals::FONT_HEIGHT * 2, mainMenuScale, true, true, onePlayerCallback);
 	FontSprite* twoPlayer = new FontSprite("Two Player", font, fontS, 0, mainMenuScale * Globals::FONT_HEIGHT * 3, mainMenuScale, true, true, twoPlayerCallback);
@@ -230,9 +230,11 @@ void InitialiseSprites() {
 		Tile t = gameState.tileGrid[i];
 		Sprite* s = new Sprite(
 			tileTexture,
-			NewRect((int)(t.GetTextureX()), (int)(t.GetTextureY()), Globals::TILE_SIZE, Globals::TILE_SIZE),
-			new Vector2((int)(t.GetPositionX()), (int)(t.GetPositionY()))
+			NewRect((int)(t.GetTextureX()), (int)(t.GetTextureY()), 100, 100),
+			new Vector2((int)(t.GetPositionX()), (int)(t.GetPositionY())),
+			new Vector2(Globals::TILE_SIZE, Globals::TILE_SIZE)
 		);
+		s->CalculateRect();
 		gameState.tileGrid[i].SetSprite(*s);
 		delete s;
 	}
@@ -502,23 +504,31 @@ void Update(double &deltaTime) {
 
 		for (int i = 0; i < 4; i++) {
 			if (gameState.playerSprite.tile == gameState.enemySprites[i].tile) {
-				if (gameState.playerSprite.deathTimer >= gameState.playerSprite.deathTime) {
-					gameState.playerSprite.lives--;
-					gameState.playerSprite.deathTimer = 0;
+				if (gameState.playerSprite.hasPill) {
+					gameState.enemySprites[i].Kill(gameState);
+				} else {
+					if (gameState.playerSprite.deathTimer >= gameState.playerSprite.deathTime) {
+						gameState.playerSprite.lives--;
+						gameState.playerSprite.deathTimer = 0;
 
-					if (gameState.playerSprite.lives <= 0) {
-						gameState.playerSprite.alive = false;
+						if (gameState.playerSprite.lives <= 0) {
+							gameState.playerSprite.alive = false;
+						}
 					}
 				}
 			}
 			if (gameState.playerTwoSprite.tile == gameState.enemySprites[i].tile) {
 				if (gameState.GetState() == TwoPlayer) {
-					if (gameState.playerTwoSprite.deathTimer >= gameState.playerTwoSprite.deathTime) {
-						gameState.playerTwoSprite.lives--;
-						gameState.playerTwoSprite.deathTimer = 0;
+					if (gameState.playerTwoSprite.hasPill) {
+						gameState.enemySprites[i].Kill(gameState);
+					} else {
+						if (gameState.playerTwoSprite.deathTimer >= gameState.playerTwoSprite.deathTime) {
+							gameState.playerTwoSprite.lives--;
+							gameState.playerTwoSprite.deathTimer = 0;
 
-						if (gameState.playerTwoSprite.lives <= 0) {
-							gameState.playerTwoSprite.alive = false;
+							if (gameState.playerTwoSprite.lives <= 0) {
+								gameState.playerTwoSprite.alive = false;
+							}
 						}
 					}
 				}
@@ -551,7 +561,7 @@ void Update(double &deltaTime) {
 
 		double leftJoyStickValue = 1;
 		double rightJoyStickValue = 1;
-		if (joystick) {
+		if (gameState.useController) {
 			leftJoyStickValue = max(abs(gameState.leftJoystickX), abs(gameState.leftJoystickY)) / 32767.0;
 			rightJoyStickValue = max(abs(gameState.rightJoystickX), abs(gameState.rightJoystickY)) / 32767.0;
 		}
@@ -608,20 +618,21 @@ void Render() {
 			gameState.tileGrid[i].GetSprite().Render(renderer);
 
 			if (gameState.tileGrid[i].CheckBiscuit()) {
-				int posX = (int)(gameState.tileGrid[i].GetPositionX() + 40);
-				int posY = (int)(gameState.tileGrid[i].GetPositionY() + 40);
+				int size = Globals::TILE_SIZE / 5;
+				int posX = (int)(gameState.tileGrid[i].GetPositionX() + (2 * size));
+				int posY = (int)(gameState.tileGrid[i].GetPositionY() + (2 * size));
 
-				SDL_Rect biscuitRect = { posX, posY, 20, 20 };
+				SDL_Rect biscuitRect = { posX, posY, size, size };
 				SDL_RenderCopy(renderer, gameState.biscuitTexture, NULL, &biscuitRect);
 			}
 			if (gameState.tileGrid[i].CheckPill()) {
-				SDL_Rect pillRect = { (int)(gameState.tileGrid[i].GetPositionX()), (int)(gameState.tileGrid[i].GetPositionY()), 100, 100 };
+				SDL_Rect pillRect = { (int)(gameState.tileGrid[i].GetPositionX()), (int)(gameState.tileGrid[i].GetPositionY()), Globals::TILE_SIZE, Globals::TILE_SIZE };
 				SDL_RenderCopyEx(renderer, gameState.pillTexture, NULL, &pillRect, gameState.pillAngle, NULL, SDL_FLIP_NONE);
 			}
 		}
 
 		for (int i = 0; i < 4; i++) {
-			gameState.enemySprites[i].Render(renderer);
+			gameState.enemySprites[i].Render(renderer, (gameState.playerSprite.hasPill || gameState.playerTwoSprite.hasPill));
 		}
 
 		gameState.playerSprite.Render(renderer);

@@ -45,8 +45,8 @@ void Tile::SetTexturePosition(int index) {
         this->hasPill = true;
         this->texturePosition = new Vector2(0, 0);
     } else {
-		int x = (Globals::GRID_TYPE[index] % 5) * Globals::TILE_SIZE;
-		int y = (Globals::GRID_TYPE[index] / 5) * Globals::TILE_SIZE;
+		int x = (Globals::GRID_TYPE[index] % 5) * 100;
+		int y = (Globals::GRID_TYPE[index] / 5) * 100;
         this->texturePosition = new Vector2(x, y);
     }
 }
