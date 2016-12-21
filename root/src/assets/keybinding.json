@@ -1,0 +1,11 @@
+{
+    "playerOneUpKey": "w",
+    "playerOneDownKey": "s",
+    "playerOneLeftKey": "a",
+    "playerOneRightKey": "d",
+    "playerTwoUpKey": "UP",
+    "playerTwoDownKey": "DOWN",
+    "playerTwoLeftKey": "LEFT",
+    "playerTwoRightKey": "RIGHT",
+    "selectKey": "RETURN"
+}

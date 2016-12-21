@@ -8,9 +8,12 @@
 #include <chrono>
 #include <string>
 #include <cmath>
+#include <fstream>
+#include <sstream>
 #include "SDL.h"
 #include "SDL_image.h"
 #include "SDL_mixer.h"
+#include "rapidjson/document.h"
 #include "headers/GameState.h"
 #include "headers/Tile.h"
 #include "headers/Vector2.h"
@@ -21,10 +24,12 @@
 
 using namespace std;
 using namespace chrono;
+using namespace rapidjson;
 
 // Methods
 void InitialiseSprites();
 void LoadAudio();
+void GetKeybinding();
 void ProcessInput();
 void Update(double&);
 void Render();
@@ -76,7 +81,7 @@ void twoPlayerCallback() {
 	Mix_HaltMusic();
 }
 void optionsCallback() {
-	cout << "clicked options" << endl;
+	gameState.SetState(Options);
 }
 void quitCallback() {
 	SDL_Log("Program quit.");
@@ -95,6 +100,14 @@ void retryTwoPlayerCallback() {
 void backToMenuCallback() {
 	gameState.SetState(MainMenu);
 }
+void increaseVolumeCallback() {
+	gameState.musicVolume += 0.1;
+	if (gameState.musicVolume >= 1.0) gameState.musicVolume = 1.0;
+}
+void decreaseVolumeCallback() {
+	gameState.musicVolume -= 0.1;
+	if (gameState.musicVolume <= 0.0) gameState.musicVolume = 0.0;
+}
 
 int main(int argc, char *argv[]) {
 	// Get Base Path
@@ -112,24 +125,29 @@ int main(int argc, char *argv[]) {
 	// Initialise SDL_image
 	int imgFlags = IMG_INIT_PNG;
 	if( !( IMG_Init( imgFlags ) & imgFlags ) ) {
-		SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL_image failed to initialise. \n");
+		SDL_LogCritical(SDL_LOG_CATEGORY_VIDEO, "SDL_image failed to initialise. \n");
 		return 1;
 	}
 	SDL_Log("SDL_image initialised successfully. \n");
 
 	if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 1024) == -1) {
-		SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL_mixer failed to initialise. \n");
+		SDL_LogCritical(SDL_LOG_CATEGORY_AUDIO, "SDL_mixer failed to initialise. \n");
 		return 1;
 	}
 	SDL_Log("SDL_mixer initialised successfully. \n");
 
 	// Create Window
-	SDL_CreateWindowAndRenderer(Globals::ACTUAL_SCREEN_WIDTH, Globals::ACTUAL_SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE, &window, &renderer);
+	SDL_DisplayMode display;
+	SDL_GetCurrentDisplayMode(0, &display);
+	int x = display.w, y = display.h;
+
+	SDL_CreateWindowAndRenderer(x / 2, y / 2, SDL_WINDOW_RESIZABLE, &window, &renderer);
 	if (window == NULL || renderer == NULL) {
-		SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL failed to create a window. \n");
+		SDL_LogCritical(SDL_LOG_CATEGORY_VIDEO, "SDL failed to create a window. \n");
 		return 1;
 	}
 	SDL_RenderSetLogicalSize(renderer, Globals::SCREEN_WIDTH, Globals::SCREEN_HEIGHT);
+	SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 	SDL_SetWindowTitle(window, "PuckMan - Ben Townshend - 13480634 - CGP2011M");
 
 	// Create Gamepad
@@ -138,26 +156,44 @@ int main(int argc, char *argv[]) {
 	   	if (joystick) {
 			SDL_Log("Joystick initialised successfully. \n");
 		} else {
-			SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "SDL failed to load joystick. \n");
+			SDL_LogCritical(SDL_LOG_CATEGORY_INPUT, "SDL failed to load joystick. \n");
 		}
 	}
 
 	// Create Sprites
 	InitialiseSprites();
 	LoadAudio();
+	GetKeybinding();
 
 	// Game Loop
 	running = true;
-	high_resolution_clock::time_point frameTime = NowTime();
-	double deltaTime = 0;
+	high_resolution_clock::time_point frameTime = NowTime(), updateStart = NowTime(), renderStart = NowTime();
+	double deltaTime = 0, inputTime = 0, updateTime = 0, renderTime = 0;
+	string performanceInfo;
+
+
 
 	while (running) {
 		deltaTime =  TimeSinceLastFrame(frameTime);
 		frameTime = NowTime();
 
+
 		ProcessInput();
+		inputTime = TimeSinceLastFrame(frameTime);
+		inputTime *= 1000;
+
+		updateStart = NowTime();
 		Update(deltaTime);
+		updateTime = TimeSinceLastFrame(updateStart);
+		updateTime *= 1000;
+
+		renderStart = NowTime();
 		Render();
+		renderTime = TimeSinceLastFrame(renderStart);
+		renderTime *= 1000;
+
+		performanceInfo = "ProcessInput: " + to_string(inputTime) + "ms " + "Update: " + to_string(updateTime) + "ms " + "Render: " + to_string(renderTime) + "ms";
+		//if (running) SDL_Log(performanceInfo.c_str());
 	}
 
 	// Clean up on close
@@ -196,11 +232,11 @@ void InitialiseSprites() {
 
 	// Main Menu
 	int mainMenuScale = 10;
-	FontSprite* title = new FontSprite("PuckMan!", font, fontS, 0, 0, mainMenuScale * 2, false, false);
-	FontSprite* onePlayer = new FontSprite("One Player", font, fontS, 0, mainMenuScale * Globals::FONT_HEIGHT * 2, mainMenuScale, true, true, onePlayerCallback);
-	FontSprite* twoPlayer = new FontSprite("Two Player", font, fontS, 0, mainMenuScale * Globals::FONT_HEIGHT * 3, mainMenuScale, true, true, twoPlayerCallback);
-	FontSprite* options = new FontSprite("Options", font, fontS, 0, mainMenuScale * Globals::FONT_HEIGHT * 4, mainMenuScale, true, true, optionsCallback);
-	FontSprite* quit = new FontSprite("Quit", font, fontS, 0, mainMenuScale * Globals::FONT_HEIGHT * 5, mainMenuScale, true, true, quitCallback);
+	FontSprite* title = new FontSprite("PuckMan", font, fontS, 0, 100, mainMenuScale * 2, false, false, false);
+	FontSprite* onePlayer = new FontSprite("One Player", font, fontS, 0, 150 + mainMenuScale * Globals::FONT_HEIGHT * 2, mainMenuScale, true, true, true, onePlayerCallback);
+	FontSprite* twoPlayer = new FontSprite("Two Player", font, fontS, 0, 160 + mainMenuScale * Globals::FONT_HEIGHT * 3, mainMenuScale, true, true, true, twoPlayerCallback);
+	FontSprite* options = new FontSprite("Options", font, fontS, 0, 170 + mainMenuScale * Globals::FONT_HEIGHT * 4, mainMenuScale, true, true, true, optionsCallback);
+	FontSprite* quit = new FontSprite("Quit", font, fontS, 0, 180 + mainMenuScale * Globals::FONT_HEIGHT * 5, mainMenuScale, true, true, true, quitCallback);
 	title->CentreHorizontal();
 	onePlayer->CentreHorizontal();
 	twoPlayer->CentreHorizontal();
@@ -218,10 +254,10 @@ void InitialiseSprites() {
 	delete quit;
 
 	// One Player Death Menu
-	FontSprite* gameOver = new FontSprite("Game Over!", font, fontS, 0, 0, mainMenuScale * 2, false, false);
-	FontSprite* retryOnePlayer = new FontSprite("Retry?", font, fontS, 0, Globals::SCREEN_HEIGHT - (2 * Globals::FONT_HEIGHT * mainMenuScale), mainMenuScale, true, true, retryOnePlayerCallback);
-	FontSprite* retryTwoPlayer = new FontSprite("Retry?", font, fontS, 0, Globals::SCREEN_HEIGHT - (2 * Globals::FONT_HEIGHT * mainMenuScale), mainMenuScale, true, true, retryTwoPlayerCallback);
-	FontSprite* mainMenu = new FontSprite("Back to Menu", font, fontS, 0, Globals::SCREEN_HEIGHT - (Globals::FONT_HEIGHT * mainMenuScale), mainMenuScale, true, true, backToMenuCallback);
+	FontSprite* gameOver = new FontSprite("Game Over!", font, fontS, 0, 100, mainMenuScale * 2, false, false, false);
+	FontSprite* retryOnePlayer = new FontSprite("Retry?", font, fontS, 0, Globals::SCREEN_HEIGHT - (2 * Globals::FONT_HEIGHT * mainMenuScale), mainMenuScale, true, true, true, retryOnePlayerCallback);
+	FontSprite* retryTwoPlayer = new FontSprite("Retry?", font, fontS, 0, Globals::SCREEN_HEIGHT - (2 * Globals::FONT_HEIGHT * mainMenuScale), mainMenuScale, true, true, true, retryTwoPlayerCallback);
+	FontSprite* mainMenu = new FontSprite("Back to Menu", font, fontS, 0, Globals::SCREEN_HEIGHT - (Globals::FONT_HEIGHT * mainMenuScale), mainMenuScale, true, true, true, backToMenuCallback);
 	gameOver->CentreHorizontal();
 	retryOnePlayer->CentreHorizontal();
 	retryTwoPlayer->CentreHorizontal();
@@ -233,10 +269,28 @@ void InitialiseSprites() {
 	gameState.endGameTwoText.push_back(*retryTwoPlayer);
 	gameState.endGameTwoText.push_back(*mainMenu);
 	delete gameOver;
+	delete retryOnePlayer;
+	delete retryTwoPlayer;
+
+	// Options Menu
+	FontSprite* optionsTitle = new FontSprite("Options", font, fontS, 0, 100, mainMenuScale * 2, false, false, false);
+	FontSprite* musicVolume = new FontSprite("Music Volume", font, fontS, 0, 150 + mainMenuScale * Globals::FONT_HEIGHT * 2, mainMenuScale, false, false, false);
+	FontSprite* increaseVolume = new FontSprite("+", font, fontS, Globals::SCREEN_WIDTH - (Globals::FONT_WIDTH * mainMenuScale * 3), 150 + mainMenuScale * Globals::FONT_HEIGHT * 2, mainMenuScale, true, true, false, increaseVolumeCallback);
+	FontSprite* decreaseVolume = new FontSprite("-", font, fontS, Globals::SCREEN_WIDTH - (Globals::FONT_WIDTH * mainMenuScale), 150 + mainMenuScale * Globals::FONT_HEIGHT * 2, mainMenuScale, true, true, false, decreaseVolumeCallback);
+	optionsTitle->CentreHorizontal();
+	gameState.optionsText.push_back(*optionsTitle);
+	gameState.optionsText.push_back(*musicVolume);
+	gameState.optionsText.push_back(*increaseVolume);
+	gameState.optionsText.push_back(*decreaseVolume);
+	gameState.optionsText.push_back(*mainMenu);
+	delete optionsTitle;
+	delete increaseVolume;
+	delete decreaseVolume;
+	delete mainMenu;
 
 	// Score Text
-	FontSprite* playerOneScoreText = new FontSprite("Score: ", font, fontS, (Globals::TILE_SIZE * 5) + 80,  Globals::SCREEN_HEIGHT - (Globals::FONT_HEIGHT * 5), 5, false, false);
-	FontSprite* playerTwoScoreText = new FontSprite("Score: ", font, fontS, (Globals::TILE_ROWS * Globals::TILE_SIZE / 2) + Globals::TILE_SIZE, Globals::SCREEN_HEIGHT - (Globals::FONT_HEIGHT * 5), 5, false, false);
+	FontSprite* playerOneScoreText = new FontSprite("Score: ", font, fontS, (Globals::TILE_SIZE * 5) + 80,  Globals::SCREEN_HEIGHT - (Globals::FONT_HEIGHT * 5), 5, false, false, false);
+	FontSprite* playerTwoScoreText = new FontSprite("Score: ", font, fontS, (Globals::SCREEN_WIDTH / 2) + Globals::TILE_SIZE, Globals::SCREEN_HEIGHT - (Globals::FONT_HEIGHT * 5), 5, false, false, false);
 	gameState.playerScoreText = *playerOneScoreText;
 	gameState.playerTwoScoreText = *playerTwoScoreText;
 	delete playerOneScoreText;
@@ -305,7 +359,7 @@ void LoadAudio() {
 	gameState.biscuitSound = Mix_LoadWAV(AddBase("assets/audio/Pickup_Biscuit.wav").c_str());
 	gameState.pillSound = Mix_LoadWAV(AddBase("assets/audio/Pickup_Pill.wav").c_str());
 	gameState.hitSound = Mix_LoadWAV(AddBase("assets/audio/Hit.wav").c_str());
-	gameState.ghostDeathSound = Mix_Load(AddBase("assets/audio/Ghost_Death.wav").c_str());
+	gameState.ghostDeathSound = Mix_LoadWAV	(AddBase("assets/audio/Ghost_Death.wav").c_str());
 
 	if (gameState.menuMusic == NULL ||
 		gameState.gameMusic == NULL ||
@@ -314,15 +368,57 @@ void LoadAudio() {
 		gameState.pillSound == NULL ||
 		gameState.hitSound == NULL ||
 		gameState.ghostDeathSound == NULL) {
-		cout << "Music couldnt be loaded" << endl;
+		SDL_LogCritical(SDL_LOG_CATEGORY_AUDIO, "Audio files could not be loaded. \n");
+	}
+}
+
+void GetKeybinding() {
+	ifstream file(AddBase("assets/keybinding.json").c_str());
+    stringstream ss;
+
+    ss << file.rdbuf();
+	string in = ss.str();
+    const char* json = in.c_str();
+
+	if (strlen(json) > 0) {
+		string in = ss.str();
+	    const char* json = in.c_str();
+
+		Document d;
+	    d.Parse(json);
+
+		gameState.playerOneUpKey = SDL_GetKeyFromName(d["playerOneUpKey"].GetString());
+		gameState.playerOneDownKey = SDL_GetKeyFromName(d["playerOneDownKey"].GetString());;
+		gameState.playerOneLeftKey = SDL_GetKeyFromName(d["playerOneLeftKey"].GetString());;
+		gameState.playerOneRightKey = SDL_GetKeyFromName(d["playerOneRightKey"].GetString());;
+		gameState.playerTwoUpKey = SDL_GetKeyFromName(d["playerTwoUpKey"].GetString());;
+		gameState.playerTwoDownKey = SDL_GetKeyFromName(d["playerTwoDownKey"].GetString());;
+		gameState.playerTwoLeftKey = SDL_GetKeyFromName(d["playerTwoLeftKey"].GetString());;
+		gameState.playerTwoRightKey = SDL_GetKeyFromName(d["playerTwoRightKey"].GetString());;
+		gameState.selectKey = SDL_GetKeyFromName(d["selectKey"].GetString());
+		SDL_Log("Keybindings were loaded from file.");
+	} else {
+		gameState.playerOneUpKey = SDLK_w;
+		gameState.playerOneDownKey = SDLK_s;
+		gameState.playerOneLeftKey = SDLK_a;
+		gameState.playerOneRightKey = SDLK_d;
+		gameState.playerTwoUpKey = SDLK_UP;
+		gameState.playerTwoDownKey = SDLK_DOWN;
+		gameState.playerTwoLeftKey = SDLK_LEFT;
+		gameState.playerTwoRightKey = SDLK_RIGHT;
+		gameState.selectKey = SDLK_RETURN;
+		SDL_Log("Keybindings could not be loaded from file.");
 	}
 }
 
 void ProcessInput() {
 	gameState.ResetInputs();
+	//SDL_GetKeyFromName()
 
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
+		SDL_Keycode k = event.key.keysym.sym;
+
 	    switch (event.type) {
 			case SDL_MOUSEMOTION:
 				gameState.mouseX = event.motion.x;
@@ -375,27 +471,33 @@ void ProcessInput() {
 				}
 				break;
 
-			case SDL_KEYDOWN:
-				switch (event.key.keysym.sym) {
-					case SDLK_w: gameState.w = true; break;
-					case SDLK_a: gameState.a = true; break;
-					case SDLK_s: gameState.s = true; break;
-					case SDLK_d: gameState.d = true; break;
-					case SDLK_UP:
-						gameState.up = true;
-						break;
-					case SDLK_LEFT:
-						gameState.left = true;
-						break;
-					case SDLK_DOWN:
-						gameState.down = true;
-						break;
-					case SDLK_RIGHT:
-						gameState.right = true;
-						break;
-					case SDLK_KP_ENTER: gameState.enter = true; break;
-					case SDLK_RETURN: gameState.enter = true; break;
-					case SDLK_ESCAPE: SDL_Log("Program quit."); running = false; break;
+			case SDL_KEYDOWN:if (k == gameState.playerOneUpKey) {
+					gameState.w = true;
+				} else if (k == gameState.playerOneLeftKey) {
+					gameState.a = true;
+				} else if (k == gameState.playerOneDownKey) {
+					gameState.s = true;
+				} else if (k == gameState.playerOneRightKey) {
+					gameState.d = true;
+				} else if (k == gameState.playerTwoUpKey) {
+					gameState.up = true;
+				} else if (k == gameState.playerTwoLeftKey) {
+					gameState.left = true;
+				} else if (k == gameState.playerTwoDownKey) {
+					gameState.down = true;
+				} else if (k == gameState.playerTwoRightKey) {
+					gameState.right = true;
+				} else if (k == gameState.selectKey) {
+					gameState.enter = true;
+				} else if (k == SDLK_ESCAPE) {
+					if (gameState.GetState() == MainMenu) {
+						SDL_Log("Program quit.");
+			 		    running = false;
+					} else if (gameState.GetState() == EndGameOnePlayer || gameState.GetState() == EndGameTwoPlayer || gameState.GetState() == Options) {
+						backToMenuCallback();
+					} else if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
+						gameState.paused = !gameState.paused;
+					}
 				}
 				break;
 
@@ -414,7 +516,7 @@ void Update(double &deltaTime) {
 	bool p1Up = false, p1Left = false, p1Down = false, p1Right = false;
 	bool p2Up = false, p2Left = false, p2Down = false, p2Right = false;
 
-	if (gameState.GetState() == MainMenu || gameState.GetState() == EndGameOnePlayer || gameState.GetState() == EndGameTwoPlayer) {
+	if (gameState.GetState() == MainMenu || gameState.GetState() == EndGameOnePlayer || gameState.GetState() == EndGameTwoPlayer || gameState.GetState() == Options) {
 		int* index = &gameState.mainMenuSelectionIndex;
 		vector<FontSprite>* items = &gameState.mainMenuText;
 		vector<FontSprite>::iterator it;
@@ -428,6 +530,11 @@ void Update(double &deltaTime) {
 		} else if (gameState.GetState() == EndGameTwoPlayer) {
 			index = &gameState.endGameTwoSelectionIndex;
 			items = &gameState.endGameTwoText;
+		} else if (gameState.GetState() == Options) {
+			index = &gameState.optionsSelectionIndex;
+			items = &gameState.optionsText;
+
+			gameState.optionsText[1].ChangeText("Volume: " + to_string((int)(gameState.musicVolume * 100)) + "%");
 		}
 
 		for (it = items->begin(); it < items->end(); it++) {
@@ -466,20 +573,20 @@ void Update(double &deltaTime) {
 			else if (gameState.s || gameState.down) moveDown = true;
 
 			if (moveUp) {
-				int newIndex = gameState.mainMenuSelectionIndex - 1;
-				if (newIndex >= 0 && items->at(newIndex).canSelect) gameState.mainMenuSelectionIndex--;
+				int newIndex = *index - 1;
+				if (newIndex >= 0 && items->at(newIndex).canSelect) *index = newIndex;
 			} else if (moveDown) {
-				int newIndex = gameState.mainMenuSelectionIndex + 1;
+				int newIndex = *index + 1;
 				if (newIndex < items->size()) {
-					if (items->at(newIndex).canSelect) gameState.mainMenuSelectionIndex++;
+					if (items->at(newIndex).canSelect) *index = newIndex;
 				}
 			}
 
 			for (it = items->begin(); it < items->end(); it++) {
 				if (it->canSelect) {
-					it->selected = (distance(items->begin(), it) == gameState.mainMenuSelectionIndex);
+					it->selected = (distance(items->begin(), it) == *index);
 
-					if (gameState.mainMenuSelectionIndex == distance(items->begin(), it)) {
+					if (*index == distance(items->begin(), it)) {
 						it->selected = true;
 
 						if (gameState.enter || gameState.aGamePad) {
@@ -495,159 +602,168 @@ void Update(double &deltaTime) {
 
 		gameState.joystickTimer += deltaTime;
 	} else if (gameState.GetState() == OnePlayer) {
-		// Player One
-		if (gameState.w || gameState.up || gameState.leftJoystickY < -Globals::JOYSTICK_DEAD_ZONE) p1Up = true;
-		else if (gameState.a || gameState.left || gameState.leftJoystickX < -Globals::JOYSTICK_DEAD_ZONE) p1Left = true;
-		else if (gameState.s || gameState.down || gameState.leftJoystickY > Globals::JOYSTICK_DEAD_ZONE) p1Down = true;
-		else if (gameState.d || gameState.right || gameState.leftJoystickX > Globals::JOYSTICK_DEAD_ZONE) p1Right = true;
+		if (!gameState.paused) {
+			// Player One
+			if (gameState.w || gameState.up || gameState.leftJoystickY < -Globals::JOYSTICK_DEAD_ZONE) p1Up = true;
+			else if (gameState.a || gameState.left || gameState.leftJoystickX < -Globals::JOYSTICK_DEAD_ZONE) p1Left = true;
+			else if (gameState.s || gameState.down || gameState.leftJoystickY > Globals::JOYSTICK_DEAD_ZONE) p1Down = true;
+			else if (gameState.d || gameState.right || gameState.leftJoystickX > Globals::JOYSTICK_DEAD_ZONE) p1Right = true;
+		}
 	} else if (gameState.GetState() == TwoPlayer) {
-		// Player One
-		if (gameState.w || gameState.leftJoystickY < -Globals::JOYSTICK_DEAD_ZONE) p1Up = true;
-		else if (gameState.a || gameState.leftJoystickX < -Globals::JOYSTICK_DEAD_ZONE) p1Left = true;
-		else if (gameState.s || gameState.leftJoystickY > Globals::JOYSTICK_DEAD_ZONE) p1Down = true;
-		else if (gameState.d || gameState.leftJoystickX > Globals::JOYSTICK_DEAD_ZONE) p1Right = true;
+		if (!gameState.paused) {
+			// Player One
+			if (gameState.w || gameState.leftJoystickY < -Globals::JOYSTICK_DEAD_ZONE) p1Up = true;
+			else if (gameState.a || gameState.leftJoystickX < -Globals::JOYSTICK_DEAD_ZONE) p1Left = true;
+			else if (gameState.s || gameState.leftJoystickY > Globals::JOYSTICK_DEAD_ZONE) p1Down = true;
+			else if (gameState.d || gameState.leftJoystickX > Globals::JOYSTICK_DEAD_ZONE) p1Right = true;
 
-		// Player Two
-		if (gameState.up || gameState.rightJoystickY < -Globals::JOYSTICK_DEAD_ZONE) p2Up = true;
-		else if (gameState.left || gameState.rightJoystickX < -Globals::JOYSTICK_DEAD_ZONE) p2Left = true;
-		else if (gameState.down || gameState.rightJoystickY > Globals::JOYSTICK_DEAD_ZONE) p2Down = true;
-		else if (gameState.right || gameState.rightJoystickX > Globals::JOYSTICK_DEAD_ZONE) p2Right = true;
+			// Player Two
+			if (gameState.up || gameState.rightJoystickY < -Globals::JOYSTICK_DEAD_ZONE) p2Up = true;
+			else if (gameState.left || gameState.rightJoystickX < -Globals::JOYSTICK_DEAD_ZONE) p2Left = true;
+			else if (gameState.down || gameState.rightJoystickY > Globals::JOYSTICK_DEAD_ZONE) p2Down = true;
+			else if (gameState.right || gameState.rightJoystickX > Globals::JOYSTICK_DEAD_ZONE) p2Right = true;
+		}
 	}
 
 	if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
-		gameState.pillAngle += deltaTime * 15;
-		if (gameState.pillAngle >= 360.0) gameState.pillAngle -= 360.0;
+		if (!gameState.paused) {
+			gameState.pillAngle += deltaTime * 15;
+			if (gameState.pillAngle >= 360.0) gameState.pillAngle -= 360.0;
 
-		if (gameState.playerSprite.alive) {
-			if (gameState.GetState() == TwoPlayer) {
-				if (!gameState.playerTwoSprite.hasPill) {
+			if (gameState.playerSprite.alive) {
+				if (gameState.GetState() == TwoPlayer) {
+					if (!gameState.playerTwoSprite.hasPill) {
+						if (p1Up && gameState.playerSprite.CanMove(gameState, Up, deltaTime)) gameState.playerSprite.moveDirection = Up;
+						if (p1Left && gameState.playerSprite.CanMove(gameState, Left, deltaTime)) gameState.playerSprite.moveDirection = Left;
+						if (p1Down && gameState.playerSprite.CanMove(gameState, Down, deltaTime)) gameState.playerSprite.moveDirection = Down;
+						if (p1Right && gameState.playerSprite.CanMove(gameState, Right, deltaTime)) gameState.playerSprite.moveDirection = Right;
+					}
+				} else {
 					if (p1Up && gameState.playerSprite.CanMove(gameState, Up, deltaTime)) gameState.playerSprite.moveDirection = Up;
 					if (p1Left && gameState.playerSprite.CanMove(gameState, Left, deltaTime)) gameState.playerSprite.moveDirection = Left;
 					if (p1Down && gameState.playerSprite.CanMove(gameState, Down, deltaTime)) gameState.playerSprite.moveDirection = Down;
 					if (p1Right && gameState.playerSprite.CanMove(gameState, Right, deltaTime)) gameState.playerSprite.moveDirection = Right;
 				}
-			} else {
-				if (p1Up && gameState.playerSprite.CanMove(gameState, Up, deltaTime)) gameState.playerSprite.moveDirection = Up;
-				if (p1Left && gameState.playerSprite.CanMove(gameState, Left, deltaTime)) gameState.playerSprite.moveDirection = Left;
-				if (p1Down && gameState.playerSprite.CanMove(gameState, Down, deltaTime)) gameState.playerSprite.moveDirection = Down;
-				if (p1Right && gameState.playerSprite.CanMove(gameState, Right, deltaTime)) gameState.playerSprite.moveDirection = Right;
 			}
-		}
 
-		if (gameState.playerTwoSprite.alive && gameState.GetState() == TwoPlayer) {
-			if (!gameState.playerSprite.hasPill) {
-				if (p2Up && gameState.playerTwoSprite.CanMove(gameState, Up, deltaTime)) gameState.playerTwoSprite.moveDirection = Up;
-				if (p2Left && gameState.playerTwoSprite.CanMove(gameState, Left, deltaTime)) gameState.playerTwoSprite.moveDirection = Left;
-				if (p2Down && gameState.playerTwoSprite.CanMove(gameState, Down, deltaTime)) gameState.playerTwoSprite.moveDirection = Down;
-				if (p2Right && gameState.playerTwoSprite.CanMove(gameState, Right, deltaTime)) gameState.playerTwoSprite.moveDirection = Right;
-			}
-		}
-
-		for (int i = 0; i < 4; i++) {
-			if (gameState.playerSprite.tile == gameState.enemySprites[i].tile) {
-				if (gameState.playerSprite.hasPill) {
-					gameState.enemySprites[i].Kill(gameState);
-					gameState.PlayGhostDeath();
-				} else {
-					if (gameState.playerSprite.deathTimer >= gameState.playerSprite.deathTime) {
-						gameState.playerSprite.lives--;
-						gameState.playerSprite.deathTimer = 0;
-						gameState.PlayHit();
-
-						if (gameState.playerSprite.lives <= 0) {
-							gameState.playerSprite.alive = false;
-						}
-					}
+			if (gameState.playerTwoSprite.alive && gameState.GetState() == TwoPlayer) {
+				if (!gameState.playerSprite.hasPill) {
+					if (p2Up && gameState.playerTwoSprite.CanMove(gameState, Up, deltaTime)) gameState.playerTwoSprite.moveDirection = Up;
+					if (p2Left && gameState.playerTwoSprite.CanMove(gameState, Left, deltaTime)) gameState.playerTwoSprite.moveDirection = Left;
+					if (p2Down && gameState.playerTwoSprite.CanMove(gameState, Down, deltaTime)) gameState.playerTwoSprite.moveDirection = Down;
+					if (p2Right && gameState.playerTwoSprite.CanMove(gameState, Right, deltaTime)) gameState.playerTwoSprite.moveDirection = Right;
 				}
 			}
-			if (gameState.playerTwoSprite.tile == gameState.enemySprites[i].tile) {
-				if (gameState.GetState() == TwoPlayer) {
-					if (gameState.playerTwoSprite.hasPill) {
+
+			for (int i = 0; i < 4; i++) {
+				if (gameState.playerSprite.tile == gameState.enemySprites[i].tile) {
+					if (gameState.playerSprite.hasPill) {
 						gameState.enemySprites[i].Kill(gameState);
 						gameState.PlayGhostDeath();
 					} else {
-						if (gameState.playerTwoSprite.deathTimer >= gameState.playerTwoSprite.deathTime) {
-							gameState.playerTwoSprite.lives--;
-							gameState.playerTwoSprite.deathTimer = 0;
+						if (gameState.playerSprite.deathTimer >= gameState.playerSprite.deathTime) {
+							gameState.playerSprite.lives--;
+							gameState.playerSprite.deathTimer = 0;
 							gameState.PlayHit();
 
-							if (gameState.playerTwoSprite.lives <= 0) {
-								gameState.playerTwoSprite.alive = false;
+							if (gameState.playerSprite.lives <= 0) {
+								gameState.playerSprite.alive = false;
+							}
+						}
+					}
+				}
+				if (gameState.playerTwoSprite.tile == gameState.enemySprites[i].tile) {
+					if (gameState.GetState() == TwoPlayer) {
+						if (gameState.playerTwoSprite.hasPill) {
+							gameState.enemySprites[i].Kill(gameState);
+							gameState.PlayGhostDeath();
+						} else {
+							if (gameState.playerTwoSprite.deathTimer >= gameState.playerTwoSprite.deathTime) {
+								gameState.playerTwoSprite.lives--;
+								gameState.playerTwoSprite.deathTimer = 0;
+								gameState.PlayHit();
+
+								if (gameState.playerTwoSprite.lives <= 0) {
+									gameState.playerTwoSprite.alive = false;
+								}
 							}
 						}
 					}
 				}
 			}
-		}
 
-		if (gameState.GetState() == OnePlayer) {
-			if (gameState.playerSprite.score >= Globals::TOTAL_SCORE) {
-				gameState.endGameOneText.at(0).ChangeText("Winner!");
-				gameState.endGameOneText.at(0).CentreHorizontal();
-				gameState.SetState(EndGameOnePlayer);
-				Mix_HaltMusic();
+			if (gameState.GetState() == OnePlayer) {
+				if (gameState.playerSprite.score >= Globals::TOTAL_SCORE) {
+					gameState.endGameOneText.at(0).ChangeText("Winner!");
+					gameState.endGameOneText.at(0).CentreHorizontal();
+					gameState.SetState(EndGameOnePlayer);
+					Mix_HaltMusic();
+				}
+				if (!gameState.playerSprite.alive) {
+					gameState.endGameOneText.at(0).ChangeText("Game Over!");
+					gameState.endGameOneText.at(0).CentreHorizontal();
+					gameState.SetState(EndGameOnePlayer);
+					Mix_HaltMusic();
+				}
+			} else if (gameState.GetState() == TwoPlayer) {
+				if (gameState.playerSprite.score + gameState.playerTwoSprite.score >= Globals::TOTAL_SCORE) {
+					gameState.endGameTwoText.at(0).ChangeText("Winner!");
+					gameState.endGameTwoText.at(0).CentreHorizontal();
+					gameState.SetState(EndGameTwoPlayer);
+					Mix_HaltMusic();
+				}
+				if (!gameState.playerSprite.alive && !gameState.playerTwoSprite.alive) {
+					gameState.endGameTwoText.at(0).ChangeText("Game Over!");
+					gameState.endGameTwoText.at(0).CentreHorizontal();
+					gameState.SetState(EndGameTwoPlayer);
+					Mix_HaltMusic();
+				}
 			}
-			if (!gameState.playerSprite.alive) {
-				gameState.endGameOneText.at(0).ChangeText("Game Over!");
-				gameState.endGameOneText.at(0).CentreHorizontal();
-				gameState.SetState(EndGameOnePlayer);
-				Mix_HaltMusic();
+
+			double leftJoyStickValue = 1;
+			double rightJoyStickValue = 1;
+			if (gameState.useController) {
+				leftJoyStickValue = max(abs(gameState.leftJoystickX), abs(gameState.leftJoystickY)) / 32767.0;
+				rightJoyStickValue = max(abs(gameState.rightJoystickX), abs(gameState.rightJoystickY)) / 32767.0;
 			}
-		} else if (gameState.GetState() == TwoPlayer) {
-			if (gameState.playerSprite.score + gameState.playerTwoSprite.score >= Globals::TOTAL_SCORE) {
-				gameState.endGameTwoText.at(0).ChangeText("Winner!");
-				gameState.endGameTwoText.at(0).CentreHorizontal();
-				gameState.SetState(EndGameTwoPlayer);
-				Mix_HaltMusic();
+
+			if (gameState.GetState() == OnePlayer) {
+				gameState.playerSprite.DoMove(gameState, p1Speed * max(leftJoyStickValue, rightJoyStickValue), deltaTime);
+				gameState.playerScoreText.ChangeText("Score: " + to_string(gameState.playerSprite.score));
+
+				gameState.playerSprite.deathTimer += deltaTime;
+			    if (gameState.playerSprite.hasPill) gameState.playerSprite.pillTimer += deltaTime;
+			    if (gameState.playerSprite.pillTimer >= gameState.playerSprite.pillTime) gameState.playerSprite.hasPill = false;
 			}
-			if (!gameState.playerSprite.alive && !gameState.playerTwoSprite.alive) {
-				gameState.endGameTwoText.at(0).ChangeText("Game Over!");
-				gameState.endGameTwoText.at(0).CentreHorizontal();
-				gameState.SetState(EndGameTwoPlayer);
-				Mix_HaltMusic();
+			else if (gameState.GetState() == TwoPlayer) {
+				gameState.playerSprite.DoMove(gameState, p1Speed * leftJoyStickValue, deltaTime);
+				gameState.playerTwoSprite.DoMove(gameState, p2Speed * rightJoyStickValue, deltaTime);
+
+				gameState.playerSprite.deathTimer += deltaTime;
+			    if (gameState.playerSprite.hasPill) gameState.playerSprite.pillTimer += deltaTime;
+			    if (gameState.playerSprite.pillTimer >= gameState.playerSprite.pillTime) gameState.playerSprite.hasPill = false;
+
+				gameState.playerScoreText.ChangeText("Score: " + to_string(gameState.playerSprite.score));
+				gameState.playerTwoScoreText.ChangeText("Score: " + to_string(gameState.playerTwoSprite.score));
+
+				gameState.playerTwoSprite.deathTimer += deltaTime;
+			    if (gameState.playerTwoSprite.hasPill) gameState.playerTwoSprite.pillTimer += deltaTime;
+			    if (gameState.playerTwoSprite.pillTimer >= gameState.playerTwoSprite.pillTime) gameState.playerTwoSprite.hasPill = false;
 			}
-		}
 
-		double leftJoyStickValue = 1;
-		double rightJoyStickValue = 1;
-		if (gameState.useController) {
-			leftJoyStickValue = max(abs(gameState.leftJoystickX), abs(gameState.leftJoystickY)) / 32767.0;
-			rightJoyStickValue = max(abs(gameState.rightJoystickX), abs(gameState.rightJoystickY)) / 32767.0;
-		}
-
-		if (gameState.GetState() == OnePlayer) {
-			gameState.playerSprite.DoMove(gameState, p1Speed * max(leftJoyStickValue, rightJoyStickValue), deltaTime);
-			gameState.playerScoreText.ChangeText("Score: " + to_string(gameState.playerSprite.score));
-
-			gameState.playerSprite.deathTimer += deltaTime;
-		    if (gameState.playerSprite.hasPill) gameState.playerSprite.pillTimer += deltaTime;
-		    if (gameState.playerSprite.pillTimer >= gameState.playerSprite.pillTime) gameState.playerSprite.hasPill = false;
-		}
-		else if (gameState.GetState() == TwoPlayer) {
-			gameState.playerSprite.DoMove(gameState, p1Speed * leftJoyStickValue, deltaTime);
-			gameState.playerTwoSprite.DoMove(gameState, p2Speed * rightJoyStickValue, deltaTime);
-
-			gameState.playerSprite.deathTimer += deltaTime;
-		    if (gameState.playerSprite.hasPill) gameState.playerSprite.pillTimer += deltaTime;
-		    if (gameState.playerSprite.pillTimer >= gameState.playerSprite.pillTime) gameState.playerSprite.hasPill = false;
-
-			gameState.playerScoreText.ChangeText("Score: " + to_string(gameState.playerSprite.score));
-			gameState.playerTwoScoreText.ChangeText("Score: " + to_string(gameState.playerTwoSprite.score));
-
-			gameState.playerTwoSprite.deathTimer += deltaTime;
-		    if (gameState.playerTwoSprite.hasPill) gameState.playerTwoSprite.pillTimer += deltaTime;
-		    if (gameState.playerTwoSprite.pillTimer >= gameState.playerTwoSprite.pillTime) gameState.playerTwoSprite.hasPill = false;
-		}
-
-		for (int i = 0; i < 4; i++) {
-			gameState.enemySprites[i].Roam(gameState, deltaTime);
+			for (int i = 0; i < 4; i++) {
+				gameState.enemySprites[i].Roam(gameState, deltaTime);
+			}
 		}
 	}
 
 	if (gameState.GetState() == MainMenu || gameState.GetState() == EndGameOnePlayer || gameState.GetState() == EndGameTwoPlayer) {
-		Mix_VolumeMusic(gameState.musicVolume);
+		Mix_VolumeMusic(MIX_MAX_VOLUME * gameState.musicVolume);
 		if (!Mix_PlayingMusic()) Mix_PlayMusic(gameState.menuMusic, -1);
 	} else if(gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
+		if (gameState.paused) Mix_PauseMusic();
+		else Mix_ResumeMusic();
+		
 		if (!Mix_PlayingMusic()) Mix_PlayMusic(gameState.gameMusic, -1);
 	}
 }
@@ -656,16 +772,20 @@ void Render() {
 	SDL_RenderClear(renderer); // Clear Previous Render
 
 	if (gameState.GetState() == MainMenu) {
-		for (int i = 0; i < Globals::MAIN_MENU_ITEMS; i++) {
+		for (int i = 0; i < gameState.mainMenuText.size(); i++) {
 			gameState.mainMenuText[i].Render(renderer);
 		}
 	} else if (gameState.GetState() == EndGameOnePlayer) {
-		for (int i = 0; i < Globals::END_GAME_ONE_ITEMS; i++) {
+		for (int i = 0; i < gameState.endGameOneText.size(); i++) {
 			gameState.endGameOneText[i].Render(renderer);
 		}
 	} else if (gameState.GetState() == EndGameTwoPlayer) {
-		for (int i = 0; i < Globals::END_GAME_TWO_ITEMS; i++) {
+		for (int i = 0; i < gameState.endGameTwoText.size(); i++) {
 			gameState.endGameTwoText[i].Render(renderer);
+		}
+	} else if (gameState.GetState() == Options) {
+		for (int i = 0; i < gameState.optionsText.size(); i++) {
+			gameState.optionsText[i].Render(renderer);
 		}
 	} else if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
 

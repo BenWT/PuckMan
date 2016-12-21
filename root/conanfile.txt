@@ -2,6 +2,7 @@
 SDL2/2.0.5@shearer12345/testing
 SDL2_image/2.0.1@lasote/stable
 SDL2_mixer/2.0.1@a_teammate/testing
+RapidJSON/1.0.2@SamuelMarks/stable
 
 [options]
 SDL2:shared=True

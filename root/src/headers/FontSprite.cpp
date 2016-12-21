@@ -37,7 +37,7 @@ bool FontSprite::CheckBounds(int x, int y) {
 void FontSprite::Render(SDL_Renderer* renderer) {
 	SDL_Rect drawRect = { destRect.x, destRect.y, (int)(fontScale * Globals::FONT_WIDTH), (int)(fontScale * Globals::FONT_HEIGHT) };
 
-	if (selected) drawRect.x += 50;
+	if (selected && moveOnSelection) drawRect.x += 50;
 
 	for(char& c : text) {
 		srcRect.x = getFontColumn(c) * Globals::FONT_WIDTH;
@@ -54,7 +54,7 @@ void FontSprite::ChangeText(std::string newText) {
 	this->destRect.w = (int)(text.size() * fontScale * Globals::FONT_WIDTH);
 }
 
-FontSprite::FontSprite(std::string text, SDL_Texture* tex, SDL_Texture* texS, int x, int y, double fontScale, bool canSelect, bool canClick) {
+FontSprite::FontSprite(std::string text, SDL_Texture* tex, SDL_Texture* texS, int x, int y, double fontScale, bool canSelect, bool canClick, bool moveOnSelection) {
 	SDL_Rect src = {0, 0, Globals::FONT_WIDTH, Globals::FONT_HEIGHT};
 
 	this->text = text;
@@ -65,10 +65,11 @@ FontSprite::FontSprite(std::string text, SDL_Texture* tex, SDL_Texture* texS, in
 	this->fontScale = fontScale;
 	this->canSelect = canSelect;
 	this->canClick = canClick;
+	this->moveOnSelection = moveOnSelection;
 	this->selected = false;
 }
 
-FontSprite::FontSprite(std::string text, SDL_Texture* tex, SDL_Texture* texS, int x, int y, double fontScale, bool canSelect, bool canClick, std::function<void()> onClick) {
+FontSprite::FontSprite(std::string text, SDL_Texture* tex, SDL_Texture* texS, int x, int y, double fontScale, bool canSelect, bool canClick, bool moveOnSelection, std::function<void()> onClick) {
 	SDL_Rect src = {0, 0, Globals::FONT_WIDTH, Globals::FONT_HEIGHT};
 
 	this->text = text;
@@ -79,6 +80,7 @@ FontSprite::FontSprite(std::string text, SDL_Texture* tex, SDL_Texture* texS, in
 	this->fontScale = fontScale;
 	this->canSelect = canSelect;
 	this->canClick = canClick;
+	this->moveOnSelection = moveOnSelection;
 	this->selected = false;
 	this->onClick = onClick;
 }
@@ -243,22 +245,25 @@ int FontSprite::getFontColumn(char c) {
 
 		case 'P':
 		case 'p':
-		case ' ':
+		case '+':
 			return 15;
 			break;
 
 		case 'Q':
 		case 'q':
+		case '-':
 			return 16;
 			break;
 
 		case 'R':
 		case 'r':
+		case '%':
 			return 17;
 			break;
 
 		case 'S':
 		case 's':
+		case ' ':
 			return 18;
 			break;
 

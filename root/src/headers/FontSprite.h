@@ -13,6 +13,7 @@ public:
 	bool canSelect = true;
 	bool canClick = true;
 	bool selected = false;
+	bool moveOnSelection = false;
 	double fontScale;
 	SDL_Texture* selectedTexture;
 	std::function<void()> onClick;
@@ -25,8 +26,8 @@ public:
 	int getFontRow(char);
 	int getFontColumn(char);
 	FontSprite() {}
-	FontSprite(std::string, SDL_Texture*, SDL_Texture*, int, int, double, bool, bool);
-	FontSprite(std::string, SDL_Texture*, SDL_Texture*, int, int, double, bool, bool, std::function<void()>);
+	FontSprite(std::string, SDL_Texture*, SDL_Texture*, int, int, double, bool, bool, bool);
+	FontSprite(std::string, SDL_Texture*, SDL_Texture*, int, int, double, bool, bool, bool, std::function<void()>);
 
 private:
 	std::string text = "";

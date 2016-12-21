@@ -21,6 +21,7 @@ public:
 	std::vector<FontSprite> mainMenuText;
 	std::vector<FontSprite> endGameOneText;
 	std::vector<FontSprite> endGameTwoText;
+	std::vector<FontSprite> optionsText;
 	std::array<Enemy, 4> enemySprites;
 	FontSprite playerScoreText;
 	FontSprite playerTwoScoreText;
@@ -45,7 +46,16 @@ public:
 
 	// Options
 	bool useController = false;
-	double musicVolume = MIX_MAX_VOLUME / 5;
+	double musicVolume = 0.5;
+	SDL_Keycode playerOneUpKey;
+	SDL_Keycode playerOneDownKey;
+	SDL_Keycode playerOneLeftKey;
+	SDL_Keycode playerOneRightKey;
+	SDL_Keycode playerTwoUpKey;
+	SDL_Keycode playerTwoDownKey;
+	SDL_Keycode playerTwoLeftKey;
+	SDL_Keycode playerTwoRightKey;
+	SDL_Keycode selectKey;
 
 	// Mouse
 	bool mouseClicked = false;
@@ -71,9 +81,11 @@ public:
 	bool enter = false;
 
 	// Menu
+	bool paused = false;
 	int mainMenuSelectionIndex = 1;
 	int endGameOneSelectionIndex = 1;
 	int endGameTwoSelectionIndex = 1;
+	int optionsSelectionIndex = 2;
 	double joystickSwapTime = 0.25;
 	double joystickTimer = 0.0;
 

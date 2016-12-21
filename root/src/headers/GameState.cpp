@@ -35,6 +35,7 @@ void GameState::SetState(MenuState state) {
 
 GameState::GameState() {
     this->state = MainMenu;
+    this->paused = false;
 
 	for (int y = 0; y < Globals::TILE_ROWS; y++) {
         for (int x = 0; x < Globals::TILE_ROWS; x++) {
