@@ -669,7 +669,7 @@ void Update(double &deltaTime) {
 							if (gameState.playerSprite.lives <= 0) {
 								gameState.playerSprite.alive = false;
 							}
-						}
+						} 
 					}
 				}
 				if (gameState.playerTwoSprite.tile == gameState.enemySprites[i].tile) {
@@ -763,7 +763,7 @@ void Update(double &deltaTime) {
 	} else if(gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
 		if (gameState.paused) Mix_PauseMusic();
 		else Mix_ResumeMusic();
-		
+
 		if (!Mix_PlayingMusic()) Mix_PlayMusic(gameState.gameMusic, -1);
 	}
 }

@@ -44,6 +44,7 @@ MoveDirection Enemy::TurnAround() {
 }
 
 void Enemy::Roam(GameState& gameState, double deltaTime) {
+    deathTimer = 10.0;
     if (timer >= 0.15) {
         bool forward = CanMove(gameState, moveDirection, deltaTime);
         bool left = CanMove(gameState, TurnLeft(), deltaTime);
@@ -97,64 +98,92 @@ void Enemy::Roam(GameState& gameState, double deltaTime) {
         }
     }
 
+    if (PlayerTwoOnRow(gameState)) {
+        if (tile < gameState.playerTwoSprite.tile) moveDirection = Right;
+        else moveDirection = Left;
+    }
+    if (PlayerTwoOnColumn(gameState)) {
+        if (tile < gameState.playerTwoSprite.tile) moveDirection = Down;
+        else moveDirection = Up;
+    }
 
-    DoMove(gameState, deltaTime * Globals::PLAYER_SPEED, deltaTime);
-    timer += deltaTime;
-
-    /* if (timer >= 0.15) {
-        if (moveDirection == Left) {
-            if (currentToggle >= toggle) {
-                if (CanMove(gameState, Up, deltaTime)) { currentToggle++; timer = 0; moveDirection = Up; }
-                else if (CanMove(gameState, Down, deltaTime)) { currentToggle++; timer = 0; moveDirection = Down; }
-                else if (!CanMove(gameState, Left, deltaTime)) { currentToggle++; timer = 0; moveDirection = Right; }
-                currentToggle = 0;
-                toggle = rand() % 10;
-            } else {
-                if (CanMove(gameState, Down, deltaTime)) { currentToggle++; timer = 0; moveDirection = Down; }
-                else if (CanMove(gameState, Up, deltaTime)) { currentToggle++; timer = 0; moveDirection = Up; }
-                else if (!CanMove(gameState, Left, deltaTime)) { currentToggle++; timer = 0; moveDirection = Right; }
-            }
-        } else if (moveDirection == Right) {
-            if (currentToggle >= toggle) {
-                if (CanMove(gameState, Down, deltaTime)) { currentToggle++; timer = 0; moveDirection = Down; }
-                else if (CanMove(gameState, Up, deltaTime)) { currentToggle++; timer = 0; moveDirection = Up; }
-                else if (!CanMove(gameState, Right, deltaTime)) { currentToggle++; timer = 0; moveDirection = Left; }
-                currentToggle = 0;
-                toggle = rand() % 10;
-            } else {
-                if (CanMove(gameState, Up, deltaTime)) { currentToggle++; timer = 0; moveDirection = Up; }
-                else if (CanMove(gameState, Down, deltaTime)) { currentToggle++; timer = 0; moveDirection = Down; }
-                else if (!CanMove(gameState, Right, deltaTime)) { currentToggle++; timer = 0; moveDirection = Left; }
-            }
-        } else if (moveDirection == Up) {
-            if (currentToggle >= toggle) {
-                if (CanMove(gameState, Left, deltaTime)) { currentToggle++; timer = 0; moveDirection = Left; }
-                else if (CanMove(gameState, Right, deltaTime)) { currentToggle++; timer = 0; moveDirection = Right; }
-                else if (!CanMove(gameState, Up, deltaTime)) { currentToggle++; timer = 0; moveDirection = Down; }
-                currentToggle = 0;
-                toggle = rand() % 10;
-            } else {
-                if (CanMove(gameState, Right, deltaTime)) { currentToggle++; timer = 0; moveDirection = Right; }
-                else if (CanMove(gameState, Left, deltaTime)) { currentToggle++; timer = 0; moveDirection = Left; }
-                else if (!CanMove(gameState, Up, deltaTime)) { currentToggle++; timer = 0; moveDirection = Down; }
-            }
-        } else if (moveDirection == Down) {
-            if (currentToggle >= toggle) {
-                if (CanMove(gameState, Right, deltaTime)) { currentToggle++; timer = 0; moveDirection = Right; }
-                else if (CanMove(gameState, Left, deltaTime)) { currentToggle++; timer = 0; moveDirection = Left; }
-                else if (!CanMove(gameState, Down, deltaTime)) { currentToggle++; timer = 0; moveDirection = Up; }
-                currentToggle = 0;
-                toggle = rand() % 10;
-            } else {
-                if (CanMove(gameState, Left, deltaTime)) { currentToggle++; timer = 0; moveDirection = Left; }
-                else if (CanMove(gameState, Right, deltaTime)) { currentToggle++; timer = 0; moveDirection = Right; }
-                else if (!CanMove(gameState, Down, deltaTime)) { currentToggle++; timer = 0; moveDirection = Up; }
-            }
-        }
+    if (PlayerOneOnRow(gameState)) {
+        if (tile < gameState.playerSprite.tile) moveDirection = Right;
+        else moveDirection = Left;
+    }
+    if (PlayerOneOnColumn(gameState)) {
+        if (tile < gameState.playerSprite.tile) moveDirection = Down;
+        else moveDirection = Up;
     }
 
     DoMove(gameState, deltaTime * Globals::PLAYER_SPEED, deltaTime);
-    timer += deltaTime; */
+    timer += deltaTime;
+}
+
+bool Enemy::PlayerOneOnRow(GameState& gameState) {
+    if (gameState.playerSprite.tile / Globals::TILE_ROWS == tile / Globals::TILE_ROWS) {
+        if (tile < gameState.playerSprite.tile) {
+            for (int i = tile; i < gameState.playerSprite.tile; i++) {
+                if (gameState.tileGrid[i].GetState() > 0) return false;
+            }
+            return true;
+        } else if (tile > gameState.playerSprite.tile) {
+            for (int i = gameState.playerSprite.tile; i < tile; i++) {
+                if (gameState.tileGrid[i].GetState() > 0) return false;
+            }
+            return true;
+        }
+    }
+    return false;
+}
+bool Enemy::PlayerTwoOnRow(GameState& gameState) {
+    if (gameState.playerTwoSprite.tile / Globals::TILE_ROWS == tile / Globals::TILE_ROWS) {
+        if (tile < gameState.playerTwoSprite.tile) {
+            for (int i = tile; i < gameState.playerTwoSprite.tile; i++) {
+                if (gameState.tileGrid[i].GetState() > 0) return false;
+            }
+            return true;
+        } else if (tile > gameState.playerTwoSprite.tile) {
+            for (int i = gameState.playerTwoSprite.tile; i < tile; i++) {
+                if (gameState.tileGrid[i].GetState() > 0) return false;
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Enemy::PlayerOneOnColumn(GameState& gameState) {
+    if (gameState.playerSprite.tile % Globals::TILE_ROWS == tile % Globals::TILE_ROWS) {
+        if (tile < gameState.playerSprite.tile) {
+            for (int i = tile; i < gameState.playerSprite.tile; i += Globals::TILE_ROWS) {
+                if (gameState.tileGrid[i].GetState() > 0) return false;
+            }
+            return true;
+        } else if (tile > gameState.playerSprite.tile) {
+            for (int i = gameState.playerSprite.tile; i < tile; i += Globals::TILE_ROWS) {
+                if (gameState.tileGrid[i].GetState() > 0) return false;
+            }
+            return true;
+        }
+    }
+    return false;
+}
+bool Enemy::PlayerTwoOnColumn(GameState& gameState) {
+    if (gameState.playerTwoSprite.tile % Globals::TILE_ROWS == tile % Globals::TILE_ROWS) {
+        if (tile < gameState.playerTwoSprite.tile) {
+            for (int i = tile; i < gameState.playerTwoSprite.tile; i += Globals::TILE_ROWS) {
+                if (gameState.tileGrid[i].GetState() > 0) return false;
+            }
+            return true;
+        } else if (tile > gameState.playerTwoSprite.tile) {
+            for (int i = gameState.playerTwoSprite.tile; i < tile; i += Globals::TILE_ROWS) {
+                if (gameState.tileGrid[i].GetState() > 0) return false;
+            }
+            return true;
+        }
+    }
+    return false;
 }
 
 void Enemy::Render(SDL_Renderer* renderer, bool hasPill) {

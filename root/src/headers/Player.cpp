@@ -57,6 +57,7 @@ void Player::DoMove(GameState& gameState, double moveAmount, double deltaTime) {
     int i = getNextIndex(moveDirection);
 
     if (hasPill) moveAmount *= 1.5;
+    if (deathTimer <= deathTime) moveAmount *= 1.5;
 
     if (tileExists(i) && alive) {
         int state = gameState.tileGrid[i].GetState();

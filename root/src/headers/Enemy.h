@@ -25,4 +25,9 @@ public:
 private:
     int toggle = rand() % 10;
     int currentToggle = 0;
+
+    bool PlayerOneOnRow(GameState& gameState);
+    bool PlayerTwoOnRow(GameState& gameState);
+    bool PlayerOneOnColumn(GameState& gameState);
+    bool PlayerTwoOnColumn(GameState& gameState);
 };
