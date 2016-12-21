@@ -34,6 +34,12 @@ void ProcessInput();
 void Update(double&);
 void Render();
 void Reset();
+void toggleFullScreen(SDL_Window* window)
+{
+	Uint32 FullscreenFlag = SDL_WINDOW_FULLSCREEN_DESKTOP;
+	bool toggle = SDL_GetWindowFlags(window) & FullscreenFlag;
+	SDL_SetWindowFullscreen(window, toggle ? 0 : FullscreenFlag);
+}
 SDL_Rect NewRect(int x, int y, int w, int h) {
 	SDL_Rect r = { x, y, w, h }; return r;
 }
@@ -107,6 +113,15 @@ void increaseVolumeCallback() {
 void decreaseVolumeCallback() {
 	gameState.musicVolume -= 0.1;
 	if (gameState.musicVolume <= 0.0) gameState.musicVolume = 0.0;
+}
+void resumeCallback() {
+	gameState.paused = false;
+}
+void backToMenuPausedCallback() {
+	Reset();
+	Mix_HaltMusic();
+	gameState.paused = false;
+	gameState.SetState(MainMenu);
 }
 
 int main(int argc, char *argv[]) {
@@ -193,7 +208,7 @@ int main(int argc, char *argv[]) {
 		renderTime *= 1000;
 
 		performanceInfo = "ProcessInput: " + to_string(inputTime) + "ms " + "Update: " + to_string(updateTime) + "ms " + "Render: " + to_string(renderTime) + "ms";
-		//if (running) SDL_Log(performanceInfo.c_str());
+		gameState.renderInfo.ChangeText(performanceInfo);
 	}
 
 	// Clean up on close
@@ -214,9 +229,10 @@ void InitialiseSprites() {
 	SDL_Surface* playerSurface = IMG_Load(AddBase("assets/textures/puckman.png").c_str());
 	SDL_Surface* enemySurface = IMG_Load(AddBase("assets/textures/ghost.png").c_str());
 	SDL_Surface* tileSurface = IMG_Load(AddBase("assets/textures/tiles.png").c_str());
-	SDL_Surface* biscuitSurface = SDL_LoadBMP(AddBase("assets/textures/biscuit.bmp").c_str());
+	SDL_Surface* biscuitSurface = IMG_Load(AddBase("assets/textures/biscuit.png").c_str());
 	SDL_Surface* pillSurface = IMG_Load(AddBase("assets/textures/pill.png").c_str());
 	SDL_Surface* heartSurface = IMG_Load(AddBase("assets/textures/heart.png").c_str());
+	SDL_Surface* pauseSurface = IMG_Load(AddBase("assets/textures/pause.png").c_str());
 	SDL_Surface* fontSurface = IMG_Load(AddBase("assets/textures/fonts.png").c_str());
 	SDL_Surface* fontSelectedSurface = IMG_Load(AddBase("assets/textures/fontsSelected.png").c_str());
 
@@ -227,6 +243,7 @@ void InitialiseSprites() {
 	gameState.biscuitTexture = SDL_CreateTextureFromSurface(renderer, biscuitSurface);
 	gameState.pillTexture = SDL_CreateTextureFromSurface(renderer, pillSurface);
 	gameState.heartTexture = SDL_CreateTextureFromSurface(renderer, heartSurface);
+	gameState.pauseTexture = SDL_CreateTextureFromSurface(renderer, pauseSurface);
 	SDL_Texture* font = SDL_CreateTextureFromSurface(renderer, fontSurface);
 	SDL_Texture* fontS = SDL_CreateTextureFromSurface(renderer, fontSelectedSurface);
 
@@ -255,20 +272,29 @@ void InitialiseSprites() {
 
 	// One Player Death Menu
 	FontSprite* gameOver = new FontSprite("Game Over!", font, fontS, 0, 100, mainMenuScale * 2, false, false, false);
+	FontSprite* scoreOne = new FontSprite("Score: ", font, fontS, 0,  150 + mainMenuScale * Globals::FONT_HEIGHT * 2, mainMenuScale, false, false, false);
+	FontSprite* scoreTwo = new FontSprite("Score: ", font, fontS, 0, 160 + mainMenuScale * Globals::FONT_HEIGHT * 3, mainMenuScale, false, false, false);
 	FontSprite* retryOnePlayer = new FontSprite("Retry?", font, fontS, 0, Globals::SCREEN_HEIGHT - (2 * Globals::FONT_HEIGHT * mainMenuScale), mainMenuScale, true, true, true, retryOnePlayerCallback);
 	FontSprite* retryTwoPlayer = new FontSprite("Retry?", font, fontS, 0, Globals::SCREEN_HEIGHT - (2 * Globals::FONT_HEIGHT * mainMenuScale), mainMenuScale, true, true, true, retryTwoPlayerCallback);
 	FontSprite* mainMenu = new FontSprite("Back to Menu", font, fontS, 0, Globals::SCREEN_HEIGHT - (Globals::FONT_HEIGHT * mainMenuScale), mainMenuScale, true, true, true, backToMenuCallback);
 	gameOver->CentreHorizontal();
+	scoreOne->CentreHorizontal();
+	scoreTwo->CentreHorizontal();
 	retryOnePlayer->CentreHorizontal();
 	retryTwoPlayer->CentreHorizontal();
 	mainMenu->CentreHorizontal();
 	gameState.endGameOneText.push_back(*gameOver);
+	gameState.endGameOneText.push_back(*scoreOne);
 	gameState.endGameOneText.push_back(*retryOnePlayer);
 	gameState.endGameOneText.push_back(*mainMenu);
 	gameState.endGameTwoText.push_back(*gameOver);
+	gameState.endGameTwoText.push_back(*scoreOne);
+	gameState.endGameTwoText.push_back(*scoreTwo);
 	gameState.endGameTwoText.push_back(*retryTwoPlayer);
 	gameState.endGameTwoText.push_back(*mainMenu);
 	delete gameOver;
+	delete scoreOne;
+	delete scoreTwo;
 	delete retryOnePlayer;
 	delete retryTwoPlayer;
 
@@ -287,6 +313,24 @@ void InitialiseSprites() {
 	delete increaseVolume;
 	delete decreaseVolume;
 	delete mainMenu;
+
+	// Pause Menu
+	FontSprite* renderInfo = new FontSprite("", font, fontS, 0, 0, mainMenuScale / 5, false, false, false);
+	gameState.renderInfo = *renderInfo;
+
+	FontSprite* pauseTitle = new FontSprite("Pause", font, fontS, 0, 100, mainMenuScale * 2, false, false, false);
+	FontSprite* resumeGame = new FontSprite("Resume", font, fontS, 0, Globals::SCREEN_HEIGHT - (2 * Globals::FONT_HEIGHT * mainMenuScale), mainMenuScale, true, true, true, resumeCallback);
+	FontSprite* mainMenuPause = new FontSprite("Back to Menu", font, fontS, 0, Globals::SCREEN_HEIGHT - (Globals::FONT_HEIGHT * mainMenuScale), mainMenuScale, true, true, true, backToMenuPausedCallback);
+	pauseTitle->CentreHorizontal();
+	resumeGame->CentreHorizontal();
+	mainMenuPause->CentreHorizontal();
+	gameState.pauseText.push_back(*pauseTitle);
+	gameState.pauseText.push_back(*resumeGame);
+	gameState.pauseText.push_back(*mainMenuPause);
+	delete renderInfo;
+	delete pauseTitle;
+	delete resumeGame;
+	delete mainMenuPause;
 
 	// Score Text
 	FontSprite* playerOneScoreText = new FontSprite("Score: ", font, fontS, (Globals::TILE_SIZE * 5) + 80,  Globals::SCREEN_HEIGHT - (Globals::FONT_HEIGHT * 5), 5, false, false, false);
@@ -471,7 +515,8 @@ void ProcessInput() {
 				}
 				break;
 
-			case SDL_KEYDOWN:if (k == gameState.playerOneUpKey) {
+			case SDL_KEYDOWN:
+			if (k == gameState.playerOneUpKey) {
 					gameState.w = true;
 				} else if (k == gameState.playerOneLeftKey) {
 					gameState.a = true;
@@ -498,6 +543,8 @@ void ProcessInput() {
 					} else if (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer) {
 						gameState.paused = !gameState.paused;
 					}
+				} else if (k == SDLK_p) {
+					toggleFullScreen(window);
 				}
 				break;
 
@@ -516,7 +563,7 @@ void Update(double &deltaTime) {
 	bool p1Up = false, p1Left = false, p1Down = false, p1Right = false;
 	bool p2Up = false, p2Left = false, p2Down = false, p2Right = false;
 
-	if (gameState.GetState() == MainMenu || gameState.GetState() == EndGameOnePlayer || gameState.GetState() == EndGameTwoPlayer || gameState.GetState() == Options) {
+	if (gameState.GetState() == MainMenu || gameState.GetState() == EndGameOnePlayer || gameState.GetState() == EndGameTwoPlayer || gameState.GetState() == Options || gameState.paused) {
 		int* index = &gameState.mainMenuSelectionIndex;
 		vector<FontSprite>* items = &gameState.mainMenuText;
 		vector<FontSprite>::iterator it;
@@ -527,14 +574,26 @@ void Update(double &deltaTime) {
 		} else if (gameState.GetState() == EndGameOnePlayer) {
 			index = &gameState.endGameOneSelectionIndex;
 			items = &gameState.endGameOneText;
+
+			gameState.endGameOneText[1].ChangeText("Score: " + to_string(gameState.playerSprite.score));
+			gameState.endGameOneText[1].CentreHorizontal();
 		} else if (gameState.GetState() == EndGameTwoPlayer) {
 			index = &gameState.endGameTwoSelectionIndex;
 			items = &gameState.endGameTwoText;
+
+			gameState.endGameTwoText[1].ChangeText("Score: " + to_string(gameState.playerSprite.score));
+			gameState.endGameTwoText[1].CentreHorizontal();
+			gameState.endGameTwoText[2].ChangeText("Score: " + to_string(gameState.playerTwoSprite.score));
+			gameState.endGameTwoText[2].CentreHorizontal();
 		} else if (gameState.GetState() == Options) {
 			index = &gameState.optionsSelectionIndex;
 			items = &gameState.optionsText;
 
 			gameState.optionsText[1].ChangeText("Volume: " + to_string((int)(gameState.musicVolume * 100)) + "%");
+		}
+		if (gameState.paused && (gameState.GetState() == OnePlayer || gameState.GetState() == TwoPlayer)) {
+			index = &gameState.pauseSelectionIndex;
+			items = &gameState.pauseText;
 		}
 
 		for (it = items->begin(); it < items->end(); it++) {
@@ -669,7 +728,7 @@ void Update(double &deltaTime) {
 							if (gameState.playerSprite.lives <= 0) {
 								gameState.playerSprite.alive = false;
 							}
-						} 
+						}
 					}
 				}
 				if (gameState.playerTwoSprite.tile == gameState.enemySprites[i].tile) {
@@ -827,7 +886,17 @@ void Render() {
 				SDL_RenderCopy(renderer, gameState.heartTexture, NULL, &dest);
 			}
 		}
+		if (gameState.paused) {
+			SDL_RenderCopy(renderer, gameState.pauseTexture, NULL, NULL);
+			for (int i = 0; i < gameState.pauseText.size(); i++) {
+				gameState.pauseText[i].Render(renderer);
+			}
+		}
+
 	}
+
+	// Render performance information to the player
+	gameState.renderInfo.Render(renderer);
 
 	// Finalise Render
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -841,6 +910,8 @@ void Reset() {
 	gameState.playerSprite.tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
 	gameState.playerSprite.SetPositionFromTile(gameState);
 	gameState.playerSprite.moveDirection = Left;
+	gameState.playerSprite.deathTimer = gameState.playerSprite.deathTime;
+	gameState.playerSprite.pillTimer = 0.0;
 
 	gameState.playerTwoSprite.alive = true;
 	gameState.playerSprite.lives = Globals::PLAYER_LIVES;
@@ -848,6 +919,8 @@ void Reset() {
 	gameState.playerTwoSprite.tile = Globals::PLAYER_START_X + (Globals::PLAYER_START_Y * Globals::TILE_ROWS);
 	gameState.playerTwoSprite.SetPositionFromTile(gameState);
 	gameState.playerTwoSprite.moveDirection = Right;
+	gameState.playerTwoSprite.deathTimer = gameState.playerTwoSprite.deathTime;
+	gameState.playerTwoSprite.pillTimer = 0.0;
 
 	for (int i = 0; i < 4; i++) {
 		gameState.enemySprites[i].alive = true;

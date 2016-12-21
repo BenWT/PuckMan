@@ -45,7 +45,7 @@ MoveDirection Enemy::TurnAround() {
 
 void Enemy::Roam(GameState& gameState, double deltaTime) {
     deathTimer = 10.0;
-    if (timer >= 0.15) {
+    if (timer >= 0.25) {
         bool forward = CanMove(gameState, moveDirection, deltaTime);
         bool left = CanMove(gameState, TurnLeft(), deltaTime);
         bool right = CanMove(gameState, TurnRight(), deltaTime);
@@ -98,20 +98,22 @@ void Enemy::Roam(GameState& gameState, double deltaTime) {
         }
     }
 
-    if (PlayerTwoOnRow(gameState)) {
-        if (tile < gameState.playerTwoSprite.tile) moveDirection = Right;
-        else moveDirection = Left;
-    }
-    if (PlayerTwoOnColumn(gameState)) {
-        if (tile < gameState.playerTwoSprite.tile) moveDirection = Down;
-        else moveDirection = Up;
+    if (gameState.GetState() == TwoPlayer) {
+        if (PlayerTwoOnRow(gameState)) {
+            if (tile < gameState.playerTwoSprite.tile) moveDirection = Right;
+            else moveDirection = Left;
+        }
+        else if (PlayerTwoOnColumn(gameState)) {
+            if (tile < gameState.playerTwoSprite.tile) moveDirection = Down;
+            else moveDirection = Up;
+        }
     }
 
     if (PlayerOneOnRow(gameState)) {
         if (tile < gameState.playerSprite.tile) moveDirection = Right;
         else moveDirection = Left;
     }
-    if (PlayerOneOnColumn(gameState)) {
+    else if (PlayerOneOnColumn(gameState)) {
         if (tile < gameState.playerSprite.tile) moveDirection = Down;
         else moveDirection = Up;
     }

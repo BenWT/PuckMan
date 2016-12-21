@@ -47,17 +47,22 @@ GameState::GameState() {
 }
 
 void GameState::PlayClick() {
+    Mix_VolumeChunk(clickSound, MIX_MAX_VOLUME * musicVolume);
     Mix_PlayChannel(-1, clickSound, 0);
 }
 void GameState::PlayBiscuit() {
+    Mix_VolumeChunk(biscuitSound, MIX_MAX_VOLUME * musicVolume);
     Mix_PlayChannel(-1, biscuitSound, 0);
 }
 void GameState::PlayPill() {
+    Mix_VolumeChunk(pillSound, MIX_MAX_VOLUME * musicVolume);
     Mix_PlayChannel(-1, pillSound, 0);
 }
 void GameState::PlayHit() {
+    Mix_VolumeChunk(hitSound, MIX_MAX_VOLUME * musicVolume);
     Mix_PlayChannel(-1, hitSound, 0);
 }
 void GameState::PlayGhostDeath() {
+    Mix_VolumeChunk(ghostDeathSound, MIX_MAX_VOLUME * musicVolume);
     Mix_PlayChannel(-1, ghostDeathSound, 0);
 }

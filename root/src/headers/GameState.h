@@ -22,12 +22,15 @@ public:
 	std::vector<FontSprite> endGameOneText;
 	std::vector<FontSprite> endGameTwoText;
 	std::vector<FontSprite> optionsText;
+	std::vector<FontSprite> pauseText;
+	FontSprite renderInfo;
 	std::array<Enemy, 4> enemySprites;
 	FontSprite playerScoreText;
 	FontSprite playerTwoScoreText;
 	SDL_Texture* biscuitTexture;
 	SDL_Texture* pillTexture;
 	SDL_Texture* heartTexture;
+	SDL_Texture* pauseTexture;
 	double pillAngle = 0.0;
 
 	// Audio
@@ -86,6 +89,7 @@ public:
 	int endGameOneSelectionIndex = 1;
 	int endGameTwoSelectionIndex = 1;
 	int optionsSelectionIndex = 2;
+	int pauseSelectionIndex = 1;
 	double joystickSwapTime = 0.25;
 	double joystickTimer = 0.0;
 
