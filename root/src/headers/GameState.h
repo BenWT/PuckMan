@@ -18,6 +18,7 @@ public:
 	Player playerSprite;
 	Player playerTwoSprite;
 	std::array<Tile, Globals::TILE_COUNT> tileGrid;
+	std::vector<FontSprite> loadingScreenText;
 	std::vector<FontSprite> mainMenuText;
 	std::vector<FontSprite> endGameOneText;
 	std::vector<FontSprite> endGameTwoText;
@@ -85,6 +86,7 @@ public:
 
 	// Menu
 	bool paused = false;
+	double loadingScreenTimer = 0.0;
 	int mainMenuSelectionIndex = 1;
 	int endGameOneSelectionIndex = 1;
 	int endGameTwoSelectionIndex = 1;

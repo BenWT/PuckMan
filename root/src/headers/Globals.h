@@ -4,7 +4,7 @@
 
 #pragma once
 
-enum MenuState { MainMenu, OnePlayer, TwoPlayer, EndGameOnePlayer, EndGameTwoPlayer, Options };
+enum MenuState { Loading, MainMenu, OnePlayer, TwoPlayer, EndGameOnePlayer, EndGameTwoPlayer, Options };
 enum MoveDirection { Up, Down, Left, Right };
 
 class Globals {
